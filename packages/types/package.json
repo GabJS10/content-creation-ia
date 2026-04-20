@@ -1,0 +1,15 @@
+{
+  "name": "@content-creation-ia/types",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.27.0"
+}
