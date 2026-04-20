@@ -1,0 +1,39 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": ".",
+    },
+    {
+      "name": "web",
+      "path": "apps/web",
+    },
+    {
+      "name": "api",
+      "path": "apps/api",
+    },
+    {
+      "name": "types",
+      "path": "packages/types",
+    },
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "prettier.requireConfig": true,
+    "eslint.workingDirectories": ["./apps/web", "./apps/api", "./packages/types"],
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.turbo": true,
+      "apps": true,
+      "packages": true,
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.turbo": true,
+    },
+  },
+}
