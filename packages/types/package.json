@@ -8,6 +8,9 @@
   "scripts": {
     "lint": "tsc --noEmit"
   },
+  "devDependencies": {
+    "typescript": "latest"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

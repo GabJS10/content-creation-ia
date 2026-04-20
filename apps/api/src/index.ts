@@ -1,20 +1,20 @@
-import { serve } from "@hono/node-server";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import type { User } from "@content-creation-ia/types";
+import { serve } from '@hono/node-server'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import type { User } from '@content-creation-ia/types'
 
-const app = new Hono();
+const app = new Hono()
 
 app.use(
-  "*",
+  '*',
   cors({
-    origin: "http://localhost:5173",
-  }),
-);
+    origin: 'http://localhost:5173',
+  })
+)
 
-app.get("/health", (c) => {
-  return c.json({ status: "ok" });
-});
+app.get('/health', (c) => {
+  return c.json({ status: 'ok' })
+})
 
 serve(
   {
@@ -22,6 +22,6 @@ serve(
     port: 3000,
   },
   (info) => {
-    console.log(`API corriendo en http://localhost:${info.port}`);
-  },
-);
+    console.log(`API corriendo en http://localhost:${info.port}`)
+  }
+)
