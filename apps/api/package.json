@@ -7,15 +7,24 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.6.6",
     "@hono/node-server": "latest",
-    "hono": "latest"
+    "better-auth": "^1.6.6",
+    "drizzle-orm": "^0.45.2",
+    "hono": "latest",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@content-creation-ia/types": "workspace:*",
     "@types/node": "latest",
+    "auth": "^1.6.6",
+    "drizzle-kit": "^0.31.10",
     "tsx": "latest",
     "typescript": "latest"
   },

@@ -1,7 +1,6 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import type { User } from '@content-creation-ia/types'
 
 const app = new Hono()
 
