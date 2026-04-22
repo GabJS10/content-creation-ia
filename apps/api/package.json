@@ -5,12 +5,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file=.env src/index.ts",
     "build": "tsc",
     "lint": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:generate": "dotenv -e .env drizzle-kit generate",
+    "db:migrate": "dotenv -e .env drizzle-kit migrate",
+    "db:studio": "dotenv -e .env drizzle-kit studio"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.6",
@@ -24,6 +24,7 @@
     "@content-creation-ia/types": "workspace:*",
     "@types/node": "latest",
     "auth": "^1.6.6",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10",
     "tsx": "latest",
     "typescript": "latest"

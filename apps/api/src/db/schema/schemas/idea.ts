@@ -1,6 +1,6 @@
 import { uuid, timestamp, varchar, text, pgTable } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
-import { users } from './user'
+import { user } from './user'
 import { voiceProfiles } from './voiceProfile'
 import { generatedContents } from './generatedContent'
 
@@ -8,7 +8,7 @@ export const ideas = pgTable('ideas', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   voiceProfileId: uuid('voice_profile_id').references(() => voiceProfiles.id, {
     onDelete: 'set null',
   }),
@@ -24,9 +24,9 @@ export type Idea = typeof ideas.$inferSelect
 export type NewIdea = typeof ideas.$inferInsert
 
 export const ideasRelations = relations(ideas, ({ one, many }) => ({
-  user: one(users, {
+  user: one(user, {
     fields: [ideas.userId],
-    references: [users.id],
+    references: [user.id],
   }),
   voiceProfile: one(voiceProfiles, {
     fields: [ideas.voiceProfileId],
