@@ -1,6 +1,6 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { signUp } from '../lib/auth-client'
+import { signUp, useSession } from '../lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,7 +15,8 @@ import {
 import { AlertCircle, Loader2, Bot } from 'lucide-react'
 
 export function Register() {
-  const navigate = useNavigate()
+  const navigate = useNavigate({ from: '/register' })
+  const { refetch } = useSession()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -53,6 +54,7 @@ export function Register() {
       if (error) {
         setError(error.message || 'Error al registrar')
       } else {
+        await refetch()
         navigate({ to: '/' })
       }
     } catch {

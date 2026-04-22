@@ -11,8 +11,9 @@ import { ThemeProvider } from './components/theme-provider'
 import { Login } from './routes/login'
 import { Register } from './routes/register'
 import App from './App'
+import { authClient } from './lib/auth-client'
 
-const rootRoute = createRootRouteWithContext<{ session: undefined }>()({
+const rootRoute = createRootRouteWithContext<{ session: any }>()({
   component: () => (
     <ThemeProvider defaultTheme="system" enableSystem>
       <div className="min-h-screen bg-background text-foreground">
@@ -43,8 +44,9 @@ const rootRoute = createRootRouteWithContext<{ session: undefined }>()({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  beforeLoad: ({ context }) => {
-    if (!context.session) {
+  beforeLoad: async ({ context }) => {
+    const session = await authClient.getSession()
+    if (!session.data) {
       throw redirect({ to: '/login' })
     }
   },
@@ -54,8 +56,9 @@ const indexRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  beforeLoad: ({ context }) => {
-    if (context.session) {
+  beforeLoad: async ({ context }) => {
+    const session = await authClient.getSession()
+    if (session.data) {
       throw redirect({ to: '/' })
     }
   },
@@ -65,8 +68,9 @@ const loginRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
-  beforeLoad: ({ context }) => {
-    if (context.session) {
+  beforeLoad: async ({ context }) => {
+    const session = await authClient.getSession()
+    if (session.data) {
       throw redirect({ to: '/' })
     }
   },
@@ -75,7 +79,7 @@ const registerRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([indexRoute, loginRoute, registerRoute])
 
-export const router = createRouter({ routeTree, context: { session: undefined } })
+export const router = createRouter({ routeTree, context: { session: undefined as any } })
 
 declare module '@tanstack/react-router' {
   interface Register {

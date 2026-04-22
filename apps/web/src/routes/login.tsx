@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { signIn } from '../lib/auth-client'
+import { signIn, useSession } from '../lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,7 +15,8 @@ import {
 import { AlertCircle, Loader2, Bot } from 'lucide-react'
 
 export function Login() {
-  const navigate = useNavigate()
+  const navigate = useNavigate({ from: '/login' })
+  const { refetch } = useSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -47,6 +48,7 @@ export function Login() {
       if (error) {
         setError(error.message || 'Credenciales incorrectas')
       } else {
+        await refetch()
         navigate({ to: '/' })
       }
     } catch {
