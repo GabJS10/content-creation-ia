@@ -1,16 +1,10 @@
-import type { Idea } from '@content-creation-ia/types'
+import { useSession } from './lib/auth-client'
 
 export default function App() {
-  const idea: Idea = {
-    id: '1',
-    userId: '1',
-    title: 'Test',
-    content: 'Test',
-    mode: 'draft',
-    selectedFormats: ['blog'],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
+  const { data: session, isPending } = useSession()
 
-  return <div>web ok — {idea.title}</div>
+  if (isPending) return <div>Cargando...</div>
+  if (!session) return <div>Sin sesión</div>
+
+  return <div>Usuario: {session.user.name}</div>
 }

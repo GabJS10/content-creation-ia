@@ -10,15 +10,28 @@
   },
   "dependencies": {
     "@content-creation-ia/types": "workspace:*",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
     "@tanstack/react-query": "latest",
     "@tanstack/react-router": "latest",
+    "better-auth": "^1.6.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.8.0",
+    "next-themes": "^0.4.6",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.11",
+    "@types/node": "^25.6.0",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.19",
     "typescript": "latest",
     "vite": "latest"
   }
