@@ -4,6 +4,8 @@ import { cors } from 'hono/cors'
 import { auth } from './lib/auth'
 import { authMiddleware } from './middleware/auth'
 import { logger } from 'hono/logger'
+import { connect as connectRabbitMQ } from './lib/rabbitmq'
+import knowledgeRoutes from './routes/knowledge'
 import type { AppVariables } from './types'
 
 const app = new Hono()
@@ -35,14 +37,20 @@ privateRoutes.get('/me', (c) => {
   return c.json({ user })
 })
 
-app.route('/api', privateRoutes)
+app.route('/api/knowledge', knowledgeRoutes)
 
-serve(
-  {
-    fetch: app.fetch,
-    port: 3000,
-  },
-  (info) => {
-    console.log(`API corriendo en http://localhost:${info.port}`)
-  }
-)
+async function start(): Promise<void> {
+  await connectRabbitMQ()
+
+  serve(
+    {
+      fetch: app.fetch,
+      port: 3000,
+    },
+    (info) => {
+      console.log(`API corriendo en http://localhost:${info.port}`)
+    }
+  )
+}
+
+start()
