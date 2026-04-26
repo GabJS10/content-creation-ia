@@ -49,7 +49,7 @@ export function Login() {
         setError(error.message || 'Credenciales incorrectas')
       } else {
         await refetch()
-        navigate({ to: '/' })
+        navigate({ to: '/dashboard' })
       }
     } catch {
       setError('Error al iniciar sesión')

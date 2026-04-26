@@ -12,31 +12,17 @@ import { Login } from './routes/login'
 import { Register } from './routes/register'
 import App from './App'
 import { authClient } from './lib/auth-client'
+import { DashboardLayout } from './routes/dashboard/layout'
+import { KnowledgeSources } from './routes/dashboard/knowledge'
+import { Voices } from './routes/dashboard/voices'
+import { Generate } from './routes/dashboard/generate'
 
 const rootRoute = createRootRouteWithContext<{ session: any }>()({
   component: () => (
     <ThemeProvider defaultTheme="system" enableSystem>
-      <div className="min-h-screen bg-background text-foreground">
-        <header className="border-b">
-          <div className="container mx-auto flex h-16 items-center justify-between px-4">
-            <nav className="flex items-center gap-6">
-              <Link to="/" className="font-medium hover:underline">
-                Inicio
-              </Link>
-              <Link to="/login" className="font-medium hover:underline">
-                Login
-              </Link>
-              <Link to="/register" className="font-medium hover:underline">
-                Register
-              </Link>
-            </nav>
-            <ThemeToggle />
-          </div>
-        </header>
-        <main className="container mx-auto px-4 py-8">
-          <Outlet />
-        </main>
-      </div>
+      <main className="container mx-auto px-4 py-8">
+        <Outlet />
+      </main>
     </ThemeProvider>
   ),
 })
@@ -77,7 +63,56 @@ const registerRoute = createRoute({
   component: Register,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, registerRoute])
+const dashboardLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/dashboard',
+  beforeLoad: async () => {
+    const { data: session } = await authClient.getSession()
+    if (!session) {
+      throw redirect({ to: '/login', replace: true })
+    }
+  },
+  component: DashboardLayout,
+})
+
+const dashboardIndexRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/dashboard/knowledge', replace: true })
+  },
+  component: () => null,
+})
+
+const knowledgeRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/knowledge',
+  component: KnowledgeSources,
+})
+
+const voicesRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/voices',
+  component: Voices,
+})
+
+const generateRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/generate',
+  component: Generate,
+})
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  registerRoute,
+  dashboardLayoutRoute.addChildren([
+    dashboardIndexRoute,
+    knowledgeRoute,
+    voicesRoute,
+    generateRoute,
+  ]),
+])
 
 export const router = createRouter({ routeTree, context: { session: undefined as any } })
 

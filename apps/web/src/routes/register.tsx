@@ -55,7 +55,7 @@ export function Register() {
         setError(error.message || 'Error al registrar')
       } else {
         await refetch()
-        navigate({ to: '/' })
+        navigate({ to: '/dashboard' })
       }
     } catch {
       setError('Error al registrar usuario')
