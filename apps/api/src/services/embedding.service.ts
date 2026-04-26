@@ -4,7 +4,49 @@ import { env } from '../lib/env'
 const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
 
 const MODEL = 'text-embedding-3-small'
-const BATCH_SIZE = 2048
+const MAX_TOKENS_PER_BATCH = 200000
+const MAX_CHUNK_WORDS = 2000
+const TOKENS_PER_WORD = 1.5
+
+function buildBatches(chunks: string[]): string[][] {
+  const safeChunks: string[] = []
+
+  for (const chunk of chunks) {
+    const words = chunk.split(/\s+/).filter((w) => w.length > 0)
+    if (words.length > MAX_CHUNK_WORDS) {
+      for (let i = 0; i < words.length; i += MAX_CHUNK_WORDS) {
+        safeChunks.push(words.slice(i, i + MAX_CHUNK_WORDS).join(' '))
+      }
+    } else {
+      safeChunks.push(chunk)
+    }
+  }
+
+  const batches: string[][] = []
+  let currentBatch: string[] = []
+  let currentTokens = 0
+
+  for (const chunk of safeChunks) {
+    const chunkWordCount = chunk.split(/\s+/).filter((w) => w.length > 0).length
+    const chunkTokens = Math.ceil(chunkWordCount * TOKENS_PER_WORD)
+
+    if (currentTokens + chunkTokens > MAX_TOKENS_PER_BATCH && currentBatch.length > 0) {
+      batches.push(currentBatch)
+      currentBatch = [chunk]
+      currentTokens = chunkTokens
+    } else {
+      currentBatch.push(chunk)
+      currentTokens += chunkTokens
+    }
+  }
+
+  if (currentBatch.length > 0) {
+    batches.push(currentBatch)
+  }
+  console.log('batches')
+
+  return batches
+}
 
 export async function generateEmbeddings(chunks: string[]): Promise<number[][]> {
   if (!env.OPENAI_API_KEY) {
@@ -15,11 +57,10 @@ export async function generateEmbeddings(chunks: string[]): Promise<number[][]> 
     return []
   }
 
+  const batches = buildBatches(chunks)
   const embeddings: number[][] = []
 
-  for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
-    const batch = chunks.slice(i, i + BATCH_SIZE)
-
+  for (const batch of batches) {
     let retries = 3
     while (retries > 0) {
       try {
@@ -27,7 +68,7 @@ export async function generateEmbeddings(chunks: string[]): Promise<number[][]> 
           model: MODEL,
           input: batch,
         })
-        const vectors = response.data.map(d => d.embedding)
+        const vectors = response.data.map((d) => d.embedding)
         embeddings.push(...vectors)
         break
       } catch (err) {
@@ -36,7 +77,7 @@ export async function generateEmbeddings(chunks: string[]): Promise<number[][]> 
           const message = err instanceof Error ? err.message : 'Unknown error'
           throw new Error(`OpenAI API failed after 3 retries: ${message}`)
         }
-        await new Promise(resolve => setTimeout(resolve, 1000 * (4 - retries)))
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (4 - retries)))
       }
     }
   }
