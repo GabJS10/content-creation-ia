@@ -6,6 +6,7 @@ import { authMiddleware } from './middleware/auth'
 import { logger } from 'hono/logger'
 import { connect as connectRabbitMQ } from './lib/rabbitmq'
 import knowledgeRoutes from './routes/knowledge'
+import { startWorker } from './workers/knowledge.worker'
 import type { AppVariables } from './types'
 
 const app = new Hono()
@@ -41,6 +42,7 @@ app.route('/api/knowledge', knowledgeRoutes)
 
 async function start(): Promise<void> {
   await connectRabbitMQ()
+  await startWorker()
 
   serve(
     {
