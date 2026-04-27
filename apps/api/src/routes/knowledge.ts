@@ -1,13 +1,13 @@
 import { Hono } from 'hono'
 import { db } from '../db'
-import { knowledgeSources } from '../db/schema'
+import { knowledgeSources, knowledgeChunks } from '../db/schema'
 import { getChannel } from '../lib/rabbitmq'
 import { subscribe } from '../lib/redis'
 import { randomUUID } from 'crypto'
 import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import { join } from 'path'
-import { eq } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 
 const knowledge = new Hono()
 
@@ -67,6 +67,46 @@ knowledge.post('/upload', async (c) => {
     title: result.title,
     status: 'pending',
   }, 202)
+})
+
+knowledge.get('/', async (c) => {
+  const sources = await db
+    .select({
+      id: knowledgeSources.id,
+      title: knowledgeSources.title,
+      status: knowledgeSources.status,
+      chunksCount: knowledgeSources.chunksCount,
+      errorMessage: knowledgeSources.errorMessage,
+      createdAt: knowledgeSources.createdAt,
+    })
+    .from(knowledgeSources)
+    .where(eq(knowledgeSources.userId, DUMMY_USER_ID))
+    .orderBy(desc(knowledgeSources.createdAt))
+
+  return c.json(sources)
+})
+
+knowledge.delete('/:source_id', async (c) => {
+  const sourceId = c.req.param('source_id')
+
+  const [source] = await db
+    .select()
+    .from(knowledgeSources)
+    .where(eq(knowledgeSources.id, sourceId))
+    .limit(1)
+
+  if (!source) {
+    return c.json({ error: 'Source not found' }, 404)
+  }
+
+  if (source.userId !== DUMMY_USER_ID) {
+    return c.json({ error: 'Source not found' }, 404)
+  }
+
+  await db.delete(knowledgeChunks).where(eq(knowledgeChunks.sourceId, sourceId))
+  await db.delete(knowledgeSources).where(eq(knowledgeSources.id, sourceId))
+
+  return c.json({ success: true })
 })
 
 knowledge.get('/:source_id/stream', async (c) => {

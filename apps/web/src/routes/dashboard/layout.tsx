@@ -21,7 +21,7 @@ export function DashboardLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-950">
+    <div className="flex min-h-screen bg-transparent">
       <aside
         className={cn(
           'fixed left-0 top-0 z-50 flex h-full flex-col border-r border-zinc-800 bg-zinc-900 transition-all duration-200',
@@ -110,8 +110,13 @@ export function DashboardLayout() {
         </div>
       </aside>
 
-      <main className={cn('flex-1 transition-all duration-200', isExpanded ? 'ml-64' : 'ml-16')}>
-        <div className="flex h-screen items-center justify-center">
+      <main
+        className={cn(
+          'flex-1 overflow-auto  transition-all duration-200',
+          isExpanded ? 'ml-64' : 'ml-16'
+        )}
+      >
+        <div className="min-h-full">
           <Outlet />
         </div>
       </main>
