@@ -72,3 +72,11 @@ export interface GeneratedContent {
   status: GeneratedContentStatus
   updatedAt: Date
 }
+
+export interface SearchResult {
+  chunkId: string
+  sourceId: string
+  content: string
+  chunkIndex: number
+  similarity: number
+}
