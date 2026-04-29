@@ -15,6 +15,8 @@ import { authClient } from './lib/auth-client'
 import { DashboardLayout } from './routes/dashboard/layout'
 import { KnowledgeSources } from './routes/dashboard/knowledge'
 import { Voices } from './routes/dashboard/voices'
+import { VoiceNew } from './routes/dashboard/voices/new'
+import { VoiceEdit } from './routes/dashboard/voices/$id/edit'
 import { Generate } from './routes/dashboard/generate'
 
 const rootRoute = createRootRouteWithContext<{ session: any }>()({
@@ -96,6 +98,18 @@ const voicesRoute = createRoute({
   component: Voices,
 })
 
+const voiceNewRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/voices/new',
+  component: VoiceNew,
+})
+
+const voiceEditRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/voices/$id/edit',
+  component: VoiceEdit,
+})
+
 const generateRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: '/generate',
@@ -110,6 +124,8 @@ const routeTree = rootRoute.addChildren([
     dashboardIndexRoute,
     knowledgeRoute,
     voicesRoute,
+    voiceNewRoute,
+    voiceEditRoute,
     generateRoute,
   ]),
 ])
