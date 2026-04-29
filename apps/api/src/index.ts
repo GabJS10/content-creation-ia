@@ -6,6 +6,7 @@ import { authMiddleware } from './middleware/auth'
 import { logger } from 'hono/logger'
 import { connect as connectRabbitMQ } from './lib/rabbitmq'
 import knowledgeRoutes from './routes/knowledge'
+import voiceRoutes from './routes/voices'
 import { startWorker } from './workers/knowledge.worker'
 import type { AppVariables } from './types'
 
@@ -39,6 +40,7 @@ privateRoutes.get('/me', (c) => {
 })
 
 app.route('/api/knowledge', knowledgeRoutes)
+app.route('/api/voices', voiceRoutes)
 
 async function start(): Promise<void> {
   await connectRabbitMQ()
