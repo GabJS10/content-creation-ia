@@ -6,7 +6,7 @@ import { generatedContents } from './generatedContent'
 
 export const ideas = pgTable('ideas', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   voiceProfileId: uuid('voice_profile_id').references(() => voiceProfiles.id, {

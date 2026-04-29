@@ -1,11 +1,11 @@
-import { uuid, timestamp, varchar, pgTable, integer } from 'drizzle-orm/pg-core'
+import { uuid, timestamp, varchar, text, pgTable, integer } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 import { user } from './user'
 import { knowledgeChunks } from './knowledgeChunk'
 
 export const knowledgeSources = pgTable('knowledge_sources', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   title: varchar('title', { length: 255 }).notNull(),

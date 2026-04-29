@@ -2,10 +2,14 @@ import { Hono } from 'hono'
 import { db } from '../db'
 import { voiceProfiles } from '../db/schema'
 import { eq, desc } from 'drizzle-orm'
+import type { AppVariables } from '../types'
 
-const voices = new Hono()
+const voices = new Hono<{ Variables: AppVariables }>()
 
-const DUMMY_USER_ID = '00000000-0000-0000-0000-000000000000'
+voices.use('/*', async (c, next) => {
+  const { authMiddleware } = await import('../middleware/auth')
+  return authMiddleware(c as any, next)
+})
 
 interface VoiceProfileInput {
   name: string
@@ -46,6 +50,14 @@ function validateInput(body: VoiceProfileInput): string | null {
 }
 
 voices.get('/', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  console.log('session', session)
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const profiles = await db
     .select({
       id: voiceProfiles.id,
@@ -56,13 +68,20 @@ voices.get('/', async (c) => {
       createdAt: voiceProfiles.createdAt,
     })
     .from(voiceProfiles)
-    .where(eq(voiceProfiles.userId, DUMMY_USER_ID))
+    .where(eq(voiceProfiles.userId, userId))
     .orderBy(desc(voiceProfiles.createdAt))
 
   return c.json(profiles)
 })
 
 voices.get('/:id', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const id = c.req.param('id')
 
   const [profile] = await db
@@ -79,7 +98,7 @@ voices.get('/:id', async (c) => {
     .where(eq(voiceProfiles.id, id))
     .limit(1)
 
-  if (!profile || profile.userId !== DUMMY_USER_ID) {
+  if (!profile || profile.userId !== userId) {
     return c.json({ error: 'Voice profile not found' }, 404)
   }
 
@@ -87,6 +106,13 @@ voices.get('/:id', async (c) => {
 })
 
 voices.post('/', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const body = await c.req.json<VoiceProfileInput>()
   const validationError = validateInput(body)
 
@@ -97,7 +123,7 @@ voices.post('/', async (c) => {
   const [profile] = await db
     .insert(voiceProfiles)
     .values({
-      userId: DUMMY_USER_ID,
+      userId,
       name: body.name.trim(),
       toneDescription: body.toneDescription.trim(),
       styleExamples: body.styleExamples.trim(),
@@ -109,6 +135,13 @@ voices.post('/', async (c) => {
 })
 
 voices.put('/:id', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const id = c.req.param('id')
   const body = await c.req.json<VoiceProfileInput>()
   const validationError = validateInput(body)
@@ -123,7 +156,7 @@ voices.put('/:id', async (c) => {
     .where(eq(voiceProfiles.id, id))
     .limit(1)
 
-  if (!existing || existing.userId !== DUMMY_USER_ID) {
+  if (!existing || existing.userId !== userId) {
     return c.json({ error: 'Voice profile not found' }, 404)
   }
 
@@ -142,6 +175,13 @@ voices.put('/:id', async (c) => {
 })
 
 voices.delete('/:id', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const id = c.req.param('id')
 
   const [existing] = await db
@@ -150,7 +190,7 @@ voices.delete('/:id', async (c) => {
     .where(eq(voiceProfiles.id, id))
     .limit(1)
 
-  if (!existing || existing.userId !== DUMMY_USER_ID) {
+  if (!existing || existing.userId !== userId) {
     return c.json({ error: 'Voice profile not found' }, 404)
   }
 

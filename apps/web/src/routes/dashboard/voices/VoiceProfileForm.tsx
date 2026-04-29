@@ -38,7 +38,9 @@ export function VoiceProfileForm({ profileId }: VoiceProfileFormProps) {
   } = useQuery({
     queryKey: ['voice-profile', profileId],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/voices/${profileId}`)
+      const res = await fetch(`http://localhost:3000/api/voices/${profileId}`, {
+        credentials: 'include',
+      })
       if (!res.ok) {
         if (res.status === 404) throw new Error('Perfil no encontrado')
         throw new Error('Error al cargar el perfil')
@@ -61,6 +63,7 @@ export function VoiceProfileForm({ profileId }: VoiceProfileFormProps) {
     mutationFn: async () => {
       const res = await fetch('http://localhost:3000/api/voices', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, toneDescription, styleExamples, intellectualReferences }),
       })
@@ -83,6 +86,7 @@ export function VoiceProfileForm({ profileId }: VoiceProfileFormProps) {
     mutationFn: async () => {
       const res = await fetch(`http://localhost:3000/api/voices/${profileId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, toneDescription, styleExamples, intellectualReferences }),
       })

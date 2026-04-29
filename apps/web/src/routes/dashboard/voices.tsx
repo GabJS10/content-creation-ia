@@ -20,7 +20,9 @@ export function Voices() {
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['voice-profiles'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/voices')
+      const res = await fetch('http://localhost:3000/api/voices', {
+        credentials: 'include',
+      })
       if (!res.ok) throw new Error('Error fetching profiles')
       return res.json() as Promise<VoiceProfile[]>
     },
@@ -30,6 +32,7 @@ export function Voices() {
     mutationFn: async (id: string) => {
       const res = await fetch(`http://localhost:3000/api/voices/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       })
       if (!res.ok) throw new Error('Delete failed')
       return res.json()

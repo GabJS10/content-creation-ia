@@ -4,7 +4,7 @@ import { user } from './user'
 
 export const voiceProfiles = pgTable('voice_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),

@@ -8,12 +8,25 @@ import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { eq, desc } from 'drizzle-orm'
+import type { AppVariables } from '../types'
 
-const knowledge = new Hono()
+const knowledge = new Hono<{ Variables: AppVariables }>()
 
-const DUMMY_USER_ID = '00000000-0000-0000-0000-000000000000'
+knowledge.use('/*', async (c, next) => {
+  const { authMiddleware } = await import('../middleware/auth')
+  return authMiddleware(c as any, next)
+})
 
 knowledge.post('/upload', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  console.log('session', session)
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const body = await c.req.parseBody()
   const title = body['title']
   const file = body['file']
@@ -46,7 +59,7 @@ knowledge.post('/upload', async (c) => {
   const [result] = await db
     .insert(knowledgeSources)
     .values({
-      userId: DUMMY_USER_ID,
+      userId,
       title: title.trim(),
       filePath,
       status: 'pending',
@@ -56,20 +69,32 @@ knowledge.post('/upload', async (c) => {
   const channel = getChannel()
   channel.sendToQueue(
     'knowledge_processing',
-    Buffer.from(JSON.stringify({
-      source_id: result.id,
-      file_path: filePath,
-    }))
+    Buffer.from(
+      JSON.stringify({
+        source_id: result.id,
+        file_path: filePath,
+      })
+    )
   )
 
-  return c.json({
-    source_id: result.id,
-    title: result.title,
-    status: 'pending',
-  }, 202)
+  return c.json(
+    {
+      source_id: result.id,
+      title: result.title,
+      status: 'pending',
+    },
+    202
+  )
 })
 
 knowledge.get('/', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const sources = await db
     .select({
       id: knowledgeSources.id,
@@ -80,13 +105,20 @@ knowledge.get('/', async (c) => {
       createdAt: knowledgeSources.createdAt,
     })
     .from(knowledgeSources)
-    .where(eq(knowledgeSources.userId, DUMMY_USER_ID))
+    .where(eq(knowledgeSources.userId, userId))
     .orderBy(desc(knowledgeSources.createdAt))
 
   return c.json(sources)
 })
 
 knowledge.delete('/:source_id', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const sourceId = c.req.param('source_id')
 
   const [source] = await db
@@ -99,7 +131,7 @@ knowledge.delete('/:source_id', async (c) => {
     return c.json({ error: 'Source not found' }, 404)
   }
 
-  if (source.userId !== DUMMY_USER_ID) {
+  if (source.userId !== userId) {
     return c.json({ error: 'Source not found' }, 404)
   }
 
@@ -125,13 +157,15 @@ knowledge.get('/:source_id/stream', async (c) => {
   if (source.status === 'ready' || source.status === 'error') {
     const eventData = JSON.stringify({
       stage: source.status,
-      message: source.errorMessage || (source.status === 'ready' ? 'Documento listo.' : 'Error en procesamiento'),
+      message:
+        source.errorMessage ||
+        (source.status === 'ready' ? 'Documento listo.' : 'Error en procesamiento'),
     })
     const body = `data: ${eventData}\n\n`
     return c.body(body, 200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     })
   }

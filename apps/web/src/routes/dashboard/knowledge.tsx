@@ -52,7 +52,9 @@ export function KnowledgeSources() {
   const { data: sources = [], isLoading } = useQuery({
     queryKey: ['knowledge-sources'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/knowledge')
+      const res = await fetch('http://localhost:3000/api/knowledge', {
+        credentials: 'include',
+      })
       if (!res.ok) throw new Error('Error fetching sources')
       return res.json() as Promise<KnowledgeSource[]>
     },
@@ -65,6 +67,7 @@ export function KnowledgeSources() {
       formData.append('title', title)
       const res = await fetch('http://localhost:3000/api/knowledge/upload', {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       })
       if (!res.ok) {
@@ -158,6 +161,7 @@ export function KnowledgeSources() {
     mutationFn: async (id: string) => {
       const res = await fetch(`http://localhost:3000/api/knowledge/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       })
       if (!res.ok) throw new Error('Delete failed')
       return res.json()
