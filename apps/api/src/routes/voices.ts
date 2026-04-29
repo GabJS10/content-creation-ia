@@ -21,13 +21,25 @@ function validateInput(body: VoiceProfileInput): string | null {
   if (body.name.trim().length > 255) {
     return 'name must not exceed 255 characters'
   }
-  if (!body.toneDescription || typeof body.toneDescription !== 'string' || body.toneDescription.trim() === '') {
+  if (
+    !body.toneDescription ||
+    typeof body.toneDescription !== 'string' ||
+    body.toneDescription.trim() === ''
+  ) {
     return 'toneDescription is required and must not be empty'
   }
-  if (!body.styleExamples || typeof body.styleExamples !== 'string' || body.styleExamples.trim() === '') {
+  if (
+    !body.styleExamples ||
+    typeof body.styleExamples !== 'string' ||
+    body.styleExamples.trim() === ''
+  ) {
     return 'styleExamples is required and must not be empty'
   }
-  if (!body.intellectualReferences || typeof body.intellectualReferences !== 'string' || body.intellectualReferences.trim() === '') {
+  if (
+    !body.intellectualReferences ||
+    typeof body.intellectualReferences !== 'string' ||
+    body.intellectualReferences.trim() === ''
+  ) {
     return 'intellectualReferences is required and must not be empty'
   }
   return null
