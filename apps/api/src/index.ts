@@ -7,6 +7,8 @@ import { logger } from 'hono/logger'
 import { connect as connectRabbitMQ } from './lib/rabbitmq'
 import knowledgeRoutes from './routes/knowledge'
 import voiceRoutes from './routes/voices'
+import ideasRoutes from './routes/ideas'
+import generateRoutes from './routes/generate'
 import { startWorker } from './workers/knowledge.worker'
 import type { AppVariables } from './types'
 
@@ -41,6 +43,8 @@ privateRoutes.get('/me', (c) => {
 
 app.route('/api/knowledge', knowledgeRoutes)
 app.route('/api/voices', voiceRoutes)
+app.route('/api/ideas', ideasRoutes)
+app.route('/api/generate', generateRoutes)
 
 async function start(): Promise<void> {
   await connectRabbitMQ()
