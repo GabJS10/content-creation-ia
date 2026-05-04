@@ -117,12 +117,14 @@ El JSON debe tener exactamente esta estructura:
 
 function getInstagramInstructions(options?: FormatOptions['instagram']): string {
   const slidesMap = {
-    short: '3-4 slides',
-    extended: '6-8 slides',
+    short: '6-8 slides',
+    extended: '10-12 slides',
   }
   const slideLengthMap = {
-    short: '3-4 líneas por slide (~250 chars). Cada slide debe desarrollar una idea completa, no solo un titular.',
-    medium: '5-7 líneas por slide (~450 chars). Cada slide debe explicar, argumentar o ilustrar con detalle.',
+    short:
+      'mínimo 500 caracteres por slide, máximo 700. Desarrolla la idea con argumentos, ejemplos o preguntas que inviten a la reflexión.',
+    medium:
+      'mínimo 700 caracteres por slide, máximo 1000. Explica, argumenta e ilustra con detalle, usando ejemplos concretos o analogías cuando sea útil.',
   }
 
   const slides = options?.slides || 'short'
@@ -135,7 +137,7 @@ function getInstagramInstructions(options?: FormatOptions['instagram']): string 
 - Longitud por slide: ${slideLengthDesc}
 - El primer slide debe ser el gancho principal que capture la atención
 - Cada slide debe tener coherencia con el anterior
-- Cada slide debe desarrollar UNA idea completa con contexto suficiente para que tenga sentido por sí solo. Evita frases sueltas o titulares sin desarrollo. El lector debe aprender o reflexionar algo concreto en cada slide, no solo recibir un impacto emocional sin sustancia.
+- Cada card debe tener entre 500 y 1000 caracteres de texto. No se aceptan frases cortas ni titulares sin desarrollo. Cada card debe contener argumentos, ejemplos o reflexiones suficientes para que el lector sienta que aprendió algo concreto al terminar de leerlo.
 - El último slide debe ser un cierre o llamada a la acción
 - El caption es el texto que acompaña la publicación
 

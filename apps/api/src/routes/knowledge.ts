@@ -12,6 +12,64 @@ import type { AppVariables } from '../types'
 
 const knowledge = new Hono<{ Variables: AppVariables }>()
 
+knowledge.get('/:source_id/stream', async (c) => {
+  const sourceId = c.req.param('source_id')
+
+  const [source] = await db
+    .select()
+    .from(knowledgeSources)
+    .where(eq(knowledgeSources.id, sourceId))
+    .limit(1)
+
+  if (!source) {
+    return c.json({ error: 'Source not found' }, 404)
+  }
+
+  if (source.status === 'ready' || source.status === 'error') {
+    const eventData = JSON.stringify({
+      stage: source.status,
+      message:
+        source.errorMessage ||
+        (source.status === 'ready' ? 'Documento listo.' : 'Error en procesamiento'),
+    })
+    const body = `data: ${eventData}\n\n`
+    return c.body(body, 200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    })
+  }
+
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    start(controller) {
+      const sendEvent = (data: object) => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+      }
+
+      subscribe(`source:${sourceId}`, (message) => {
+        try {
+          const event = JSON.parse(message)
+          sendEvent(event)
+          if (event.stage === 'ready' || event.stage === 'error') {
+            controller.close()
+          }
+        } catch {
+          controller.close()
+        }
+      })
+    },
+  })
+
+  c.header('Content-Type', 'text/event-stream')
+  c.header('Cache-Control', 'no-cache')
+  c.header('Connection', 'keep-alive')
+  c.header('X-Accel-Buffering', 'no')
+
+  return c.body(stream)
+})
+
 knowledge.use('/*', async (c, next) => {
   const { authMiddleware } = await import('../middleware/auth')
   return authMiddleware(c as any, next)
@@ -139,64 +197,6 @@ knowledge.delete('/:source_id', async (c) => {
   await db.delete(knowledgeSources).where(eq(knowledgeSources.id, sourceId))
 
   return c.json({ success: true })
-})
-
-knowledge.get('/:source_id/stream', async (c) => {
-  const sourceId = c.req.param('source_id')
-
-  const [source] = await db
-    .select()
-    .from(knowledgeSources)
-    .where(eq(knowledgeSources.id, sourceId))
-    .limit(1)
-
-  if (!source) {
-    return c.json({ error: 'Source not found' }, 404)
-  }
-
-  if (source.status === 'ready' || source.status === 'error') {
-    const eventData = JSON.stringify({
-      stage: source.status,
-      message:
-        source.errorMessage ||
-        (source.status === 'ready' ? 'Documento listo.' : 'Error en procesamiento'),
-    })
-    const body = `data: ${eventData}\n\n`
-    return c.body(body, 200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    })
-  }
-
-  const encoder = new TextEncoder()
-  const stream = new ReadableStream({
-    start(controller) {
-      const sendEvent = (data: object) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
-      }
-
-      subscribe(`source:${sourceId}`, (message) => {
-        try {
-          const event = JSON.parse(message)
-          sendEvent(event)
-          if (event.stage === 'ready' || event.stage === 'error') {
-            controller.close()
-          }
-        } catch {
-          controller.close()
-        }
-      })
-    },
-  })
-
-  c.header('Content-Type', 'text/event-stream')
-  c.header('Cache-Control', 'no-cache')
-  c.header('Connection', 'keep-alive')
-  c.header('X-Accel-Buffering', 'no')
-
-  return c.body(stream)
 })
 
 export default knowledge

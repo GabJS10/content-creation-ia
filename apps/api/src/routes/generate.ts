@@ -111,10 +111,12 @@ generateRouter.post('/', async (c) => {
             ragContext,
           })
 
+          console.log('Generated prompt:', prompt)
+
           const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
 
           const completion = await client.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4.1',
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           })
