@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Zap, FileText, History, Plus, Trash2, AlertTriangle, X } from 'lucide-react'
+import {
+  Zap, FileText, History, Plus, Trash2, AlertTriangle, X,
+  FileText as FileTextIcon, Image, Video, Sparkles, ChevronDown, ChevronRight,
+} from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -27,13 +30,46 @@ interface VoiceProfile {
   createdAt: string
 }
 
+interface KnowledgeSource {
+  id: string
+  title: string
+  status: 'pending' | 'processing' | 'ready' | 'error'
+  chunks_count: number | null
+}
+
+interface BlogOptions {
+  length: 'short' | 'medium' | 'long'
+  tone: 'informativo' | 'opinion' | 'tutorial'
+}
+
+interface InstagramOptions {
+  slides: 'short' | 'extended'
+  slideLength: 'short' | 'medium'
+}
+
+interface VideoScriptOptions {
+  duration: '60s' | '3min' | '5min'
+  style: 'educativo' | 'storytelling' | 'opinion'
+}
+
+interface FormatState {
+  selected: boolean
+  options: BlogOptions | InstagramOptions | VideoScriptOptions
+}
+
 const FORMAT_LABELS: Record<string, string> = {
   blog: 'Blog',
   instagram: 'Instagram',
-  video_script: 'Video',
+  video_script: 'Video Script',
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
+const defaultFormatStates: Record<string, FormatState> = {
+  blog: { selected: false, options: { length: 'medium', tone: 'informativo' } as BlogOptions },
+  instagram: { selected: false, options: { slides: 'short', slideLength: 'short' } as InstagramOptions },
+  video_script: { selected: false, options: { duration: '60s', style: 'educativo' } as VideoScriptOptions },
+}
 
 export function Generate() {
   const navigate = useNavigate()
@@ -45,6 +81,8 @@ export function Generate() {
   const [content, setContent] = useState('')
   const [mode, setMode] = useState<'quick' | 'draft'>('quick')
   const [voiceProfileId, setVoiceProfileId] = useState<string | null>(null)
+  const [selectedSourceIds, setSelectedSourceIds] = useState<string[]>([])
+  const [formatStates, setFormatStates] = useState<Record<string, FormatState>>(defaultFormatStates)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isSaving, setIsSaving] = useState(false)
 
@@ -66,8 +104,19 @@ export function Generate() {
     },
   })
 
+  const { data: knowledgeSources = [] } = useQuery({
+    queryKey: ['knowledge-sources'],
+    queryFn: async () => {
+      const res = await fetch('http://localhost:3000/api/knowledge', { credentials: 'include' })
+      if (!res.ok) throw new Error('Error fetching sources')
+      return res.json() as Promise<KnowledgeSource[]>
+    },
+  })
+
+  const readySources = knowledgeSources.filter((s) => s.status === 'ready')
+
   const createIdeaMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string; mode: string }) => {
+    mutationFn: async (data: { title: string; content: string; mode: string; voiceProfileId?: string | null }) => {
       const res = await fetch('http://localhost:3000/api/ideas', {
         method: 'POST',
         credentials: 'include',
@@ -97,7 +146,7 @@ export function Generate() {
   })
 
   const updateIdeaMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string; mode: string }) => {
+    mutationFn: async (data: { title: string; content: string; mode: string; voiceProfileId?: string | null; selectedFormats?: string[] }) => {
       const res = await fetch(`http://localhost:3000/api/ideas/${ideaId}`, {
         method: 'PUT',
         credentials: 'include',
@@ -133,7 +182,7 @@ export function Generate() {
     if (!content.trim()) return
 
     const title = content.slice(0, 50) || 'Sin título'
-    const data = { title, content, mode }
+    const data = { title, content, mode, voiceProfileId }
 
     setIsSaving(true)
     setSaveStatus('saving')
@@ -151,7 +200,7 @@ export function Generate() {
     } finally {
       setIsSaving(false)
     }
-  }, [content, mode, ideaId])
+  }, [content, mode, ideaId, voiceProfileId])
 
   useEffect(() => {
     if (!content.trim()) return
@@ -162,7 +211,12 @@ export function Generate() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [content, mode, saveIdea])
+  }, [content, mode, saveIdea, voiceProfileId])
+
+  const handleModeChange = (newMode: 'quick' | 'draft') => {
+    setMode(newMode)
+    setSelectedSourceIds([])
+  }
 
   const handleNewIdea = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -170,6 +224,8 @@ export function Generate() {
     setContent('')
     setMode('quick')
     setVoiceProfileId(null)
+    setSelectedSourceIds([])
+    setFormatStates(defaultFormatStates)
     setSaveStatus('idle')
     setIsSaving(false)
   }
@@ -180,8 +236,89 @@ export function Generate() {
     setContent(idea.content)
     setMode(idea.mode)
     setVoiceProfileId(idea.voiceProfileId)
+    setSelectedSourceIds([])
+    setFormatStates(defaultFormatStates)
     setSaveStatus('idle')
     setIsDrawerOpen(false)
+  }
+
+  const toggleSource = (sourceId: string) => {
+    setSelectedSourceIds((prev) =>
+      prev.includes(sourceId)
+        ? prev.filter((id) => id !== sourceId)
+        : [...prev, sourceId]
+    )
+  }
+
+  const toggleFormat = (format: string) => {
+    setFormatStates((prev) => ({
+      ...prev,
+      [format]: {
+        ...prev[format],
+        selected: !prev[format].selected,
+      },
+    }))
+  }
+
+  const updateBlogOption = (key: keyof BlogOptions, value: BlogOptions[keyof BlogOptions]) => {
+    setFormatStates((prev) => ({
+      ...prev,
+      blog: {
+        ...prev.blog,
+        options: { ...prev.blog.options, [key]: value },
+      },
+    }))
+  }
+
+  const updateInstagramOption = (key: keyof InstagramOptions, value: InstagramOptions[keyof InstagramOptions]) => {
+    setFormatStates((prev) => ({
+      ...prev,
+      instagram: {
+        ...prev.instagram,
+        options: { ...prev.instagram.options, [key]: value },
+      },
+    }))
+  }
+
+  const updateVideoScriptOption = (key: keyof VideoScriptOptions, value: VideoScriptOptions[keyof VideoScriptOptions]) => {
+    setFormatStates((prev) => ({
+      ...prev,
+      video_script: {
+        ...prev.video_script,
+        options: { ...prev.video_script.options, [key]: value },
+      },
+    }))
+  }
+
+  const handleGenerate = () => {
+    const activeFormats = Object.entries(formatStates)
+      .filter(([, state]) => state.selected)
+      .map(([format]) => format)
+
+    const formatOptions: Record<string, object> = {}
+    for (const format of activeFormats) {
+      formatOptions[format] = formatStates[format].options
+    }
+
+    const payload = {
+      ideaId,
+      formats: activeFormats,
+      formatOptions,
+      sourceIds: mode === 'quick' ? selectedSourceIds : [],
+    }
+
+    console.log('Generation payload:', payload)
+
+    if (ideaId) {
+      queryClient.setQueryData<Idea[]>(['ideas'], (old) => {
+        if (!old) return old
+        return old.map((i) =>
+          i.id === ideaId
+            ? { ...i, selectedFormats: activeFormats, voiceProfileId }
+            : i
+        )
+      })
+    }
   }
 
   const formatDate = (dateStr: string) => {
@@ -192,6 +329,16 @@ export function Generate() {
   const sortedIdeas = [...ideas].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   )
+
+  const activeFormats = Object.entries(formatStates).filter(([, s]) => s.selected)
+  const canGenerate =
+    content.trim() &&
+    activeFormats.length > 0 &&
+    (mode === 'draft' || selectedSourceIds.length > 0)
+
+  const blogOptions = formatStates.blog.options as BlogOptions
+  const instagramOptions = formatStates.instagram.options as InstagramOptions
+  const videoScriptOptions = formatStates.video_script.options as VideoScriptOptions
 
   return (
     <div className="flex h-full">
@@ -215,7 +362,7 @@ export function Generate() {
               className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
             >
               <Plus className="size-4 mr-2" />
-              Nueva idea
+              Nuevo
             </Button>
           </div>
         </div>
@@ -223,7 +370,7 @@ export function Generate() {
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="flex gap-2">
             <button
-              onClick={() => setMode('quick')}
+              onClick={() => handleModeChange('quick')}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                 mode === 'quick'
@@ -235,7 +382,7 @@ export function Generate() {
               Modo rápido
             </button>
             <button
-              onClick={() => setMode('draft')}
+              onClick={() => handleModeChange('draft')}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                 mode === 'draft'
@@ -303,6 +450,241 @@ export function Generate() {
               </div>
             )}
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+              Documentos de conocimiento
+              {mode === 'quick' && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-red-500/20 text-red-400">
+                  Requerido
+                </span>
+              )}
+            </label>
+            {readySources.length === 0 ? (
+              <div className="flex items-center gap-2 text-xs text-yellow-500 p-3 rounded bg-yellow-500/10">
+                <AlertTriangle className="size-4 shrink-0" />
+                <span>
+                  No tienes documentos procesados.{' '}
+                  <button
+                    onClick={() => navigate({ to: '/dashboard/knowledge' })}
+                    className="underline hover:text-yellow-400"
+                  >
+                    Sube documentos
+                  </button>{' '}
+                  en la sección Knowledge Sources
+                </span>
+              </div>
+            ) : (
+              <>
+                {mode === 'draft' && (
+                  <p className="text-xs text-zinc-500">
+                    Opcional. Enriquece tu borrador con tus documentos de conocimiento.
+                  </p>
+                )}
+                <div className="space-y-2 border border-zinc-800 rounded-lg p-3">
+                  {readySources.map((source) => (
+                    <label
+                      key={source.id}
+                      className="flex items-center gap-3 cursor-pointer hover:bg-zinc-800/30 p-1.5 rounded transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSourceIds.includes(source.id)}
+                        onChange={() => toggleSource(source.id)}
+                        className="size-4 rounded border-zinc-600 bg-zinc-800 text-zinc-50 focus:ring-zinc-500"
+                      />
+                      <FileTextIcon className="size-4 text-zinc-500 shrink-0" />
+                      <span className="text-sm text-zinc-200 flex-1">{source.title}</span>
+                      <span className="text-xs text-zinc-500">
+                        {source.chunks_count} fragmentos
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-zinc-300">Formatos a generar</label>
+            <p className="text-xs text-zinc-500">Selecciona uno o más formatos</p>
+
+            <div className="space-y-2">
+              {(['blog', 'instagram', 'video_script'] as const).map((format) => {
+                const state = formatStates[format]
+                const icons = {
+                  blog: FileTextIcon,
+                  instagram: Image,
+                  video_script: Video,
+                }
+                const Icon = icons[format]
+
+                return (
+                  <div key={format} className="border border-zinc-800 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleFormat(format)}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-zinc-800/30 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={state.selected}
+                        onChange={() => toggleFormat(format)}
+                        className="size-4 rounded border-zinc-600 bg-zinc-800 text-zinc-50 focus:ring-zinc-500"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <Icon className="size-4 text-zinc-400" />
+                      <span className="text-sm text-zinc-200 flex-1 text-left">
+                        {FORMAT_LABELS[format]}
+                      </span>
+                      {state.selected ? (
+                        <ChevronDown className="size-4 text-zinc-400" />
+                      ) : (
+                        <ChevronRight className="size-4 text-zinc-400" />
+                      )}
+                    </button>
+
+                    {state.selected && format === 'blog' && (
+                      <div className="px-3 pb-3 pt-1 border-t border-zinc-800 space-y-3">
+                        <div className="space-y-1">
+                          <span className="text-xs text-zinc-500">Longitud</span>
+                          <div className="flex gap-1">
+                            {(['short', 'medium', 'long'] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                onClick={() => updateBlogOption('length', opt)}
+                                className={cn(
+                                  'flex-1 px-2 py-1.5 rounded text-xs transition-colors',
+                                  blogOptions.length === opt
+                                    ? 'bg-zinc-700 text-zinc-100'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700/50'
+                                )}
+                              >
+                                {opt === 'short' ? 'Corto ~500' : opt === 'medium' ? 'Medio ~1000' : 'Largo ~1500'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs text-zinc-500">Tono</span>
+                          <div className="flex gap-1">
+                            {(['informativo', 'opinion', 'tutorial'] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                onClick={() => updateBlogOption('tone', opt)}
+                                className={cn(
+                                  'flex-1 px-2 py-1.5 rounded text-xs transition-colors capitalize',
+                                  blogOptions.tone === opt
+                                    ? 'bg-zinc-700 text-zinc-100'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700/50'
+                                )}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {state.selected && format === 'instagram' && (
+                      <div className="px-3 pb-3 pt-1 border-t border-zinc-800 space-y-3">
+                        <div className="space-y-1">
+                          <span className="text-xs text-zinc-500">Slides</span>
+                          <div className="flex gap-1">
+                            {(['short', 'extended'] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                onClick={() => updateInstagramOption('slides', opt)}
+                                className={cn(
+                                  'flex-1 px-2 py-1.5 rounded text-xs transition-colors',
+                                  instagramOptions.slides === opt
+                                    ? 'bg-zinc-700 text-zinc-100'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700/50'
+                                )}
+                              >
+                                {opt === 'short' ? 'Corto (3-4)' : 'Ampliado (6-8)'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs text-zinc-500">Longitud por slide</span>
+                          <div className="flex gap-1">
+                            {(['short', 'medium'] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                onClick={() => updateInstagramOption('slideLength', opt)}
+                                className={cn(
+                                  'flex-1 px-2 py-1.5 rounded text-xs transition-colors',
+                                  instagramOptions.slideLength === opt
+                                    ? 'bg-zinc-700 text-zinc-100'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700/50'
+                                )}
+                              >
+                                {opt === 'short' ? 'Corto (2 líneas)' : 'Medio (4 líneas)'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {state.selected && format === 'video_script' && (
+                      <div className="px-3 pb-3 pt-1 border-t border-zinc-800 space-y-3">
+                        <div className="space-y-1">
+                          <span className="text-xs text-zinc-500">Duración</span>
+                          <div className="flex gap-1">
+                            {(['60s', '3min', '5min'] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                onClick={() => updateVideoScriptOption('duration', opt)}
+                                className={cn(
+                                  'flex-1 px-2 py-1.5 rounded text-xs transition-colors',
+                                  videoScriptOptions.duration === opt
+                                    ? 'bg-zinc-700 text-zinc-100'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700/50'
+                                )}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs text-zinc-500">Estilo</span>
+                          <div className="flex gap-1">
+                            {(['educativo', 'storytelling', 'opinion'] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                onClick={() => updateVideoScriptOption('style', opt)}
+                                className={cn(
+                                  'flex-1 px-2 py-1.5 rounded text-xs transition-colors capitalize',
+                                  videoScriptOptions.style === opt
+                                    ? 'bg-zinc-700 text-zinc-100'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700/50'
+                                )}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <Button
+            onClick={handleGenerate}
+            disabled={!canGenerate}
+            className="w-full bg-zinc-50 text-zinc-900 hover:bg-zinc-200 disabled:opacity-50 h-12 text-base"
+          >
+            <Sparkles className="size-5 mr-2" />
+            Generar contenido
+          </Button>
         </div>
       </div>
 
