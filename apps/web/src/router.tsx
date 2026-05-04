@@ -18,6 +18,8 @@ import { Voices } from './routes/dashboard/voices'
 import { VoiceNew } from './routes/dashboard/voices/new'
 import { VoiceEdit } from './routes/dashboard/voices/$id/edit'
 import { Generate } from './routes/dashboard/generate'
+import { ContentList } from './routes/dashboard/content'
+import { ContentDetail } from './routes/dashboard/content/$ideaId'
 
 const rootRoute = createRootRouteWithContext<{ session: any }>()({
   component: () => (
@@ -116,6 +118,24 @@ const generateRoute = createRoute({
   component: Generate,
 })
 
+const contentRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/content',
+  component: ContentList,
+})
+
+const contentDetailRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/content/$ideaId',
+  component: ContentDetail,
+})
+
+const contentEditorRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/content/editor/$contentId',
+  component: () => <div>Content editor coming soon</div>,
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -127,6 +147,9 @@ const routeTree = rootRoute.addChildren([
     voiceNewRoute,
     voiceEditRoute,
     generateRoute,
+    contentRoute,
+    contentDetailRoute,
+    contentEditorRoute,
   ]),
 ])
 

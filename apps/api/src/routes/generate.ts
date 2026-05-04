@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { db } from '../db'
 import { ideas, voiceProfiles, generatedContents } from '../db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import OpenAI from 'openai'
 import { env } from '../lib/env'
 import { buildPrompt, extractJSON } from '../services/generation.service'
@@ -165,6 +165,40 @@ generateRouter.post('/', async (c) => {
   c.header('X-Accel-Buffering', 'no')
 
   return c.body(stream)
+})
+
+generateRouter.delete('/:contentId', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const contentId = c.req.param('contentId')
+
+  const [content] = await db
+    .select({
+      id: generatedContents.id,
+      ideaId: generatedContents.ideaId,
+    })
+    .from(generatedContents)
+    .innerJoin(ideas, eq(generatedContents.ideaId, ideas.id))
+    .where(
+      and(
+        eq(generatedContents.id, contentId),
+        eq(ideas.userId, userId)
+      )
+    )
+    .limit(1)
+
+  if (!content) {
+    return c.json({ error: 'Content not found' }, 404)
+  }
+
+  await db.delete(generatedContents).where(eq(generatedContents.id, contentId))
+
+  return c.json({ success: true })
 })
 
 export default generateRouter

@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { Outlet } from '@tanstack/react-router'
 import { useSession, signOut } from '@/lib/auth-client'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { BookOpen, Mic, Sparkles, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { BookOpen, Mic, Sparkles, LayoutList, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { label: 'Knowledge Sources', to: '/dashboard/knowledge', icon: BookOpen },
   { label: 'Perfiles de voz', to: '/dashboard/voices', icon: Mic },
   { label: 'Generación', to: '/dashboard/generate', icon: Sparkles },
+  { label: 'Tu contenido', to: '/dashboard/content', icon: LayoutList },
 ]
 
 export function DashboardLayout() {
