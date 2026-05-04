@@ -4,6 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   Zap, FileText, History, Plus, Trash2, AlertTriangle, X,
   FileText as FileTextIcon, Image, Video, Sparkles, ChevronDown, ChevronRight,
+  Loader2,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -57,6 +58,19 @@ interface FormatState {
   options: BlogOptions | InstagramOptions | VideoScriptOptions
 }
 
+interface StreamingContent {
+  contentId: string
+  text: string
+  done: boolean
+  error?: string
+}
+
+interface StreamingContents {
+  blog?: StreamingContent
+  instagram?: StreamingContent
+  video_script?: StreamingContent
+}
+
 const FORMAT_LABELS: Record<string, string> = {
   blog: 'Blog',
   instagram: 'Instagram',
@@ -85,6 +99,10 @@ export function Generate() {
   const [formatStates, setFormatStates] = useState<Record<string, FormatState>>(defaultFormatStates)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isSaving, setIsSaving] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generatingFormat, setGeneratingFormat] = useState<string | null>(null)
+  const [streamingContents, setStreamingContents] = useState<StreamingContents>({})
+  const [generationError, setGenerationError] = useState<string | null>(null)
 
   const { data: ideas = [], isLoading: isLoadingIdeas } = useQuery({
     queryKey: ['ideas'],
@@ -290,10 +308,12 @@ export function Generate() {
     }))
   }
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     const activeFormats = Object.entries(formatStates)
       .filter(([, state]) => state.selected)
       .map(([format]) => format)
+
+    if (activeFormats.length === 0) return
 
     const formatOptions: Record<string, object> = {}
     for (const format of activeFormats) {
@@ -307,8 +327,6 @@ export function Generate() {
       sourceIds: mode === 'quick' ? selectedSourceIds : [],
     }
 
-    console.log('Generation payload:', payload)
-
     if (ideaId) {
       queryClient.setQueryData<Idea[]>(['ideas'], (old) => {
         if (!old) return old
@@ -318,6 +336,128 @@ export function Generate() {
             : i
         )
       })
+    }
+
+    setIsGenerating(true)
+    setGeneratingFormat(null)
+    setStreamingContents({})
+    setGenerationError(null)
+
+    try {
+      const response = await fetch('http://localhost:3000/api/generate', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+
+      if (!response.body) {
+        throw new Error('No response body')
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const event = JSON.parse(line.slice(6))
+              handleSSEEvent(event)
+            } catch {
+              // ignore parse errors
+            }
+          }
+        }
+      }
+
+      if (buffer.startsWith('data: ')) {
+        try {
+          const event = JSON.parse(buffer.slice(6))
+          handleSSEEvent(event)
+        } catch {
+          // ignore parse errors
+        }
+      }
+    } catch (err) {
+      setGenerationError(err instanceof Error ? err.message : 'Error de red')
+      setIsGenerating(false)
+      setGeneratingFormat(null)
+    }
+  }
+
+  const handleSSEEvent = (event: Record<string, unknown>) => {
+    if (event.status === 'complete') {
+      setIsGenerating(false)
+      setGeneratingFormat(null)
+      queryClient.invalidateQueries({ queryKey: ['ideas'] })
+      return
+    }
+
+    const format = event.format as string
+    const status = event.status as string
+
+    if (!['blog', 'instagram', 'video_script'].includes(format)) return
+
+    if (status === 'starting') {
+      setGeneratingFormat(format)
+      setStreamingContents((prev) => ({
+        ...prev,
+        [format]: {
+          contentId: event.contentId as string,
+          text: '',
+          done: false,
+        },
+      }))
+    } else if (status === 'streaming') {
+      const chunk = event.chunk as string
+      setStreamingContents((prev) => {
+        const current = prev[format as keyof StreamingContents]
+        return {
+          ...prev,
+          [format]: {
+            ...current!,
+            text: current!.text + chunk,
+          },
+        }
+      })
+    } else if (status === 'done') {
+      setStreamingContents((prev) => {
+        const current = prev[format as keyof StreamingContents]
+        return {
+          ...prev,
+          [format]: {
+            ...current!,
+            done: true,
+          },
+        }
+      })
+      setGeneratingFormat(null)
+    } else if (status === 'error') {
+      setStreamingContents((prev) => {
+        const current = prev[format as keyof StreamingContents]
+        return {
+          ...prev,
+          [format]: {
+            ...current!,
+            done: true,
+            error: event.message as string,
+          },
+        }
+      })
+      setGeneratingFormat(null)
     }
   }
 
@@ -679,17 +819,105 @@ export function Generate() {
 
           <Button
             onClick={handleGenerate}
-            disabled={!canGenerate}
+            disabled={!canGenerate || isGenerating}
             className="w-full bg-zinc-50 text-zinc-900 hover:bg-zinc-200 disabled:opacity-50 h-12 text-base"
           >
-            <Sparkles className="size-5 mr-2" />
-            Generar contenido
+            {isGenerating ? (
+              <>
+                <Loader2 className="size-5 mr-2 animate-spin" />
+                Generando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-5 mr-2" />
+                Generar contenido
+              </>
+            )}
           </Button>
         </div>
       </div>
 
-      <div className="w-3/5 flex items-center justify-center">
-        <p className="text-zinc-600">El contenido generado aparecerá aquí</p>
+      <div className="w-3/5 flex flex-col">
+        {generationError && (
+          <div className="p-4 m-4 rounded-lg bg-red-500/10 border border-red-500/20">
+            <p className="text-sm text-red-400">Error: {generationError}</p>
+          </div>
+        )}
+
+        {!isGenerating && Object.keys(streamingContents).length === 0 && !generationError && (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <Sparkles className="size-12 text-zinc-600 mb-4" />
+            <p className="text-zinc-600">El contenido generado aparecerá aquí</p>
+          </div>
+        )}
+
+        {(isGenerating || Object.keys(streamingContents).length > 0) && (
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {(['blog', 'instagram', 'video_script'] as const).map((format) => {
+              const content = streamingContents[format]
+              if (!content && !isGenerating) return null
+
+              const icons = {
+                blog: FileTextIcon,
+                instagram: Image,
+                video_script: Video,
+              }
+              const Icon = icons[format]
+              const isActive = generatingFormat === format
+              const hasContent = !!content
+
+              if (!hasContent && !isGenerating) return null
+
+              return (
+                <div key={format} className="border border-zinc-800 rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50">
+                    <Icon className="size-4 text-zinc-400" />
+                    <span className="text-sm text-zinc-200 flex-1">{FORMAT_LABELS[format]}</span>
+                    {content?.done && !content.error && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">
+                        Listo
+                      </span>
+                    )}
+                    {content?.error && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">
+                        Error
+                      </span>
+                    )}
+                    {isActive && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
+                        <Loader2 className="size-3 animate-spin" />
+                        Generando...
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3 bg-zinc-900/50">
+                    {content?.error ? (
+                      <p className="text-sm text-red-400">{content.error}</p>
+                    ) : content?.text ? (
+                      <pre className="text-xs text-zinc-300 font-mono whitespace-pre-wrap break-words max-h-96 overflow-y-auto">
+                        {content.text}
+                        {!content.done && <span className="animate-pulse">▋</span>}
+                      </pre>
+                    ) : (
+                      <p className="text-xs text-zinc-600 italic">Esperando contenido...</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+
+            {!isGenerating && Object.keys(streamingContents).length > 0 && !generationError && (
+              <div className="pt-4 flex justify-center">
+                <Button
+                  onClick={() => console.log('Ver editores - TODO')}
+                  className="bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                >
+                  Ver editores
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>

@@ -19,7 +19,7 @@ export async function searchChunks(
   const queryEmbedding = await generateEmbeddings([query.trim()])
   const vector = queryEmbedding[0]
   const vectorLiteral = `[${vector.join(',')}]`
-
+  const sourceIdsLiteral = `{${sourceIds.map((id) => `"${id}"`).join(',')}}`
   const results = (await db.execute(sql`
     SELECT 
       id,
@@ -28,20 +28,18 @@ export async function searchChunks(
       chunk_index,
       1 - (embedding <=> ${vectorLiteral}::vector) as similarity
     FROM knowledge_chunks
-    WHERE source_id = ANY(${sourceIds}::uuid[])
+    WHERE source_id = ANY(${sourceIdsLiteral}::uuid[])
     ORDER BY embedding <=> ${vectorLiteral}::vector
     LIMIT ${topK}
-  `)) as unknown as {
-    rows: Array<{
-      id: string
-      source_id: string
-      content: string
-      chunk_index: number
-      similarity: number
-    }>
-  }
+  `)) as unknown as Array<{
+    id: string
+    source_id: string
+    content: string
+    chunk_index: number
+    similarity: number
+  }>
 
-  return results.rows.map((row) => ({
+  return results.map((row) => ({
     chunkId: row.id,
     sourceId: row.source_id,
     content: row.content,

@@ -121,8 +121,8 @@ function getInstagramInstructions(options?: FormatOptions['instagram']): string 
     extended: '6-8 slides',
   }
   const slideLengthMap = {
-    short: 'máximo 2 líneas por slide (~150 chars)',
-    medium: 'máximo 4 líneas por slide (~300 chars)',
+    short: '3-4 líneas por slide (~250 chars). Cada slide debe desarrollar una idea completa, no solo un titular.',
+    medium: '5-7 líneas por slide (~450 chars). Cada slide debe explicar, argumentar o ilustrar con detalle.',
   }
 
   const slides = options?.slides || 'short'
@@ -135,6 +135,7 @@ function getInstagramInstructions(options?: FormatOptions['instagram']): string 
 - Longitud por slide: ${slideLengthDesc}
 - El primer slide debe ser el gancho principal que capture la atención
 - Cada slide debe tener coherencia con el anterior
+- Cada slide debe desarrollar UNA idea completa con contexto suficiente para que tenga sentido por sí solo. Evita frases sueltas o titulares sin desarrollo. El lector debe aprender o reflexionar algo concreto en cada slide, no solo recibir un impacto emocional sin sustancia.
 - El último slide debe ser un cierre o llamada a la acción
 - El caption es el texto que acompaña la publicación
 

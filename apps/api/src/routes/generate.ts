@@ -48,11 +48,7 @@ generateRouter.post('/', async (c) => {
     }
   }
 
-  const [idea] = await db
-    .select()
-    .from(ideas)
-    .where(eq(ideas.id, body.ideaId))
-    .limit(1)
+  const [idea] = await db.select().from(ideas).where(eq(ideas.id, body.ideaId)).limit(1)
 
   if (!idea || idea.userId !== userId) {
     return c.json({ error: 'Idea not found' }, 404)
@@ -74,11 +70,13 @@ generateRouter.post('/', async (c) => {
     }
   }
 
+  console.log('sourceIds:', body.sourceIds)
+
   let ragContext: string | undefined
   if (body.sourceIds && body.sourceIds.length > 0) {
     const chunks = await searchChunks(idea.content, body.sourceIds, 5)
     if (chunks.length > 0) {
-      ragContext = chunks.map(c => c.content).join('\n\n')
+      ragContext = chunks.map((c) => c.content).join('\n\n')
     }
   }
 
