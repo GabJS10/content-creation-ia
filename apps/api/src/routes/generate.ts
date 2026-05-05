@@ -201,4 +201,105 @@ generateRouter.delete('/:contentId', async (c) => {
   return c.json({ success: true })
 })
 
+interface UpdateContentInput {
+  content: Record<string, unknown>
+}
+
+generateRouter.put('/:contentId', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const contentId = c.req.param('contentId')
+  const body = await c.req.json<UpdateContentInput>()
+
+  if (!body.content || typeof body.content !== 'object' || Object.keys(body.content).length === 0) {
+    return c.json({ error: 'content is required and must be a non-empty object' }, 400)
+  }
+
+  const [existingContent] = await db
+    .select({
+      id: generatedContents.id,
+      ideaId: generatedContents.ideaId,
+    })
+    .from(generatedContents)
+    .innerJoin(ideas, eq(generatedContents.ideaId, ideas.id))
+    .where(
+      and(
+        eq(generatedContents.id, contentId),
+        eq(ideas.userId, userId)
+      )
+    )
+    .limit(1)
+
+  if (!existingContent) {
+    return c.json({ error: 'Content not found' }, 404)
+  }
+
+  const [updated] = await db
+    .update(generatedContents)
+    .set({
+      content: body.content,
+      status: 'edited',
+      updatedAt: new Date(),
+    })
+    .where(eq(generatedContents.id, contentId))
+    .returning()
+
+  return c.json(updated)
+})
+
+generateRouter.get('/:contentId', async (c) => {
+  const session = c.get('session')
+  const userId = session?.userId
+
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const contentId = c.req.param('contentId')
+
+  const [content] = await db
+    .select({
+      id: generatedContents.id,
+      ideaId: generatedContents.ideaId,
+      format: generatedContents.format,
+      status: generatedContents.status,
+      content: generatedContents.content,
+      updatedAt: generatedContents.updatedAt,
+      ideaTitle: ideas.title,
+      ideaMode: ideas.mode,
+    })
+    .from(generatedContents)
+    .innerJoin(ideas, eq(generatedContents.ideaId, ideas.id))
+    .where(
+      and(
+        eq(generatedContents.id, contentId),
+        eq(ideas.userId, userId)
+      )
+    )
+    .limit(1)
+
+  if (!content) {
+    return c.json({ error: 'Content not found' }, 404)
+  }
+
+  return c.json({
+    id: content.id,
+    ideaId: content.ideaId,
+    format: content.format,
+    status: content.status,
+    content: content.content,
+    updatedAt: content.updatedAt,
+    idea: {
+      id: content.ideaId,
+      title: content.ideaTitle,
+      mode: content.ideaMode,
+    },
+  })
+})
+
 export default generateRouter
