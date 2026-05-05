@@ -20,6 +20,7 @@ import { VoiceEdit } from './routes/dashboard/voices/$id/edit'
 import { Generate } from './routes/dashboard/generate'
 import { ContentList } from './routes/dashboard/content'
 import { ContentDetail } from './routes/dashboard/content/$ideaId'
+import { ContentEditor } from './pages/content/editor'
 
 const rootRoute = createRootRouteWithContext<{ session: any }>()({
   component: () => (
@@ -133,7 +134,7 @@ const contentDetailRoute = createRoute({
 const contentEditorRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: '/content/editor/$contentId',
-  component: () => <div>Content editor coming soon</div>,
+  component: ContentEditor,
 })
 
 const routeTree = rootRoute.addChildren([

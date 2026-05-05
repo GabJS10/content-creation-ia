@@ -111,7 +111,7 @@ RESPONDE ÚNICAMENTE con un JSON válido, sin texto adicional, sin bloques de c�
 El JSON debe tener exactamente esta estructura:
 {
   "title": "título del artículo",
-  "body": "contenido completo del artículo en markdown"
+  "body": "contenido completo del artículo en HTML válido. Usa etiquetas semánticas: <h2> y <h3> para subtítulos, <p> para párrafos, <strong> para negrita, <em> para cursiva, <ul> y <li> para listas. NO uses markdown, solo HTML puro."
 }`
 }
 
