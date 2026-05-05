@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface InstagramContent {
   caption: string
@@ -34,19 +36,7 @@ export function InstagramEditor({ content, contentId, ideaId, ideaTitle }: Insta
   const queryClient = useQueryClient()
   const [caption, setCaption] = useState(content.caption)
   const [cards, setCards] = useState<Array<{ text: string }>>(content.cards)
-  const [showSaved, setShowSaved] = useState(false)
-  const [initialState, setInitialState] = useState<InstagramContent | null>(null)
-
-  useEffect(() => {
-    setCaption(content.caption)
-    setCards(content.cards)
-    setInitialState({ caption: content.caption, cards: content.cards })
-  }, [content.caption, content.cards])
-
-  const hasChanges = initialState
-    ? caption !== initialState.caption ||
-      cards.some((card, i) => card.text !== initialState.cards[i]?.text)
-    : false
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -60,13 +50,23 @@ export function InstagramEditor({ content, contentId, ideaId, ideaTitle }: Insta
       return res.json()
     },
     onSuccess: () => {
-      setInitialState({ caption, cards: [...cards] })
-      setShowSaved(true)
-      setTimeout(() => setShowSaved(false), 2000)
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2000)
       queryClient.invalidateQueries({ queryKey: ['idea', ideaId] })
       queryClient.invalidateQueries({ queryKey: ['content', contentId] })
     },
+    onError: () => {
+      setSaveStatus('error')
+    },
   })
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSaveStatus('saving')
+      saveMutation.mutate()
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [caption, cards])
 
   const updateCard = (index: number, text: string) => {
     setCards((prev) => {
@@ -93,20 +93,20 @@ export function InstagramEditor({ content, contentId, ideaId, ideaTitle }: Insta
             Instagram
           </span>
         </div>
-        <Button
-          onClick={() => saveMutation.mutate()}
-          disabled={!hasChanges || saveMutation.isPending}
-          className="bg-zinc-50 text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
-        >
-          {saveMutation.isPending ? (
-            <span className="size-4 border-2 border-zinc-900/30 border-t-zinc-900 rounded-full animate-spin mr-2" />
-          ) : showSaved ? (
-            <span className="text-green-600 mr-2">✓</span>
-          ) : (
-            <Save className="size-4 mr-2" />
+        <div className="flex items-center gap-2 min-w-[120px] justify-end">
+          {saveStatus === 'saving' && (
+            <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+              <span className="size-3 border-2 border-zinc-500/30 border-t-zinc-500 rounded-full animate-spin" />
+              Guardando...
+            </span>
           )}
-          {showSaved ? 'Guardado' : 'Guardar'}
-        </Button>
+          {saveStatus === 'saved' && (
+            <span className="text-xs text-green-400">Guardado ✓</span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="text-xs text-red-400">Error al guardar</span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">

@@ -2,10 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface BlogContent {
   title: string
@@ -25,8 +27,8 @@ export function BlogEditor({ content, contentId, ideaId, ideaTitle }: BlogEditor
   const [title, setTitle] = useState(content.title)
   const [htmlContent, setHtmlContent] = useState('')
   const [isHtmlReady, setIsHtmlReady] = useState(false)
-  const [showSaved, setShowSaved] = useState(false)
-  const [initialState, setInitialState] = useState<{ title: string; body: string } | null>(null)
+  const [editorContent, setEditorContent] = useState('')
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
   const editor = useEditor({
     extensions: [
@@ -39,11 +41,15 @@ export function BlogEditor({ content, contentId, ideaId, ideaTitle }: BlogEditor
       }),
     ],
     content: htmlContent,
+    onUpdate: ({ editor }) => {
+      setEditorContent(editor.getHTML())
+    },
   })
 
   useEffect(() => {
     setHtmlContent(content.body)
-    setInitialState({ title: content.title, body: content.body })
+    setEditorContent(content.body)
+    setTitle(content.title)
     setIsHtmlReady(true)
   }, [content.body, content.title])
 
@@ -53,16 +59,9 @@ export function BlogEditor({ content, contentId, ideaId, ideaTitle }: BlogEditor
     }
   }, [editor, isHtmlReady, htmlContent])
 
-  const hasChanges = initialState
-    ? title !== initialState.title || (editor ? editor.getHTML() !== initialState.body : false)
-    : false
-
-  console.log(editor?.getHTML())
-
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!editor) return
-      const bodyHtml = editor.getHTML()
+      const bodyHtml = editor?.getHTML() || ''
       const res = await fetch(`http://localhost:3000/api/generate/${contentId}`, {
         method: 'PUT',
         credentials: 'include',
@@ -73,17 +72,25 @@ export function BlogEditor({ content, contentId, ideaId, ideaTitle }: BlogEditor
       return res.json()
     },
     onSuccess: () => {
-      if (editor) {
-        setInitialState({ title, body: editor.getHTML() })
-      } else {
-        setInitialState({ title, body: '' })
-      }
-      setShowSaved(true)
-      setTimeout(() => setShowSaved(false), 2000)
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2000)
       queryClient.invalidateQueries({ queryKey: ['idea', ideaId] })
       queryClient.invalidateQueries({ queryKey: ['content', contentId] })
     },
+    onError: () => {
+      setSaveStatus('error')
+    },
   })
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (title !== content.title || editorContent !== content.body) {
+        setSaveStatus('saving')
+        saveMutation.mutate()
+      }
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [title, editorContent])
 
   const toggleFormat = useCallback(
     (format: string) => {
@@ -132,20 +139,20 @@ export function BlogEditor({ content, contentId, ideaId, ideaTitle }: BlogEditor
             Blog
           </span>
         </div>
-        <Button
-          onClick={() => saveMutation.mutate()}
-          disabled={!hasChanges || saveMutation.isPending}
-          className="bg-zinc-50 text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
-        >
-          {saveMutation.isPending ? (
-            <span className="size-4 border-2 border-zinc-900/30 border-t-zinc-900 rounded-full animate-spin mr-2" />
-          ) : showSaved ? (
-            <span className="text-green-600 mr-2">✓</span>
-          ) : (
-            <Save className="size-4 mr-2" />
+        <div className="flex items-center gap-2 min-w-[120px] justify-end">
+          {saveStatus === 'saving' && (
+            <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+              <span className="size-3 border-2 border-zinc-500/30 border-t-zinc-500 rounded-full animate-spin" />
+              Guardando...
+            </span>
           )}
-          {showSaved ? 'Guardado' : 'Guardar'}
-        </Button>
+          {saveStatus === 'saved' && (
+            <span className="text-xs text-green-400">Guardado ✓</span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="text-xs text-red-400">Error al guardar</span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
