@@ -2,6 +2,7 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { BlogEditor } from './editors/blog-editor'
+import { InstagramEditor } from './editors/instagram-editor'
 
 interface ContentResponse {
   id: string
@@ -78,15 +79,12 @@ export function ContentEditor() {
 
   if (contentData.format === 'instagram') {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <p className="text-zinc-400">Editor Instagram próximamente</p>
-        <Button
-          onClick={() => navigate({ to: `/dashboard/content/${contentData.ideaId}` })}
-          className="mt-4 bg-zinc-50 text-zinc-900 hover:bg-zinc-200"
-        >
-          Volver
-        </Button>
-      </div>
+      <InstagramEditor
+        content={contentData.content as unknown as { caption: string; cards: Array<{ text: string }> }}
+        contentId={contentData.id}
+        ideaId={contentData.ideaId}
+        ideaTitle={contentData.idea.title}
+      />
     )
   }
 
