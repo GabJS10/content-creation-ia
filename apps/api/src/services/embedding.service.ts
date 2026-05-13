@@ -1,7 +1,4 @@
 import OpenAI from 'openai'
-import { env } from '../lib/env'
-
-const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
 
 const MODEL = 'text-embedding-3-small'
 const MAX_TOKENS_PER_BATCH = 200000
@@ -48,10 +45,8 @@ function buildBatches(chunks: string[]): string[][] {
   return batches
 }
 
-export async function generateEmbeddings(chunks: string[]): Promise<number[][]> {
-  if (!env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not configured')
-  }
+export async function generateEmbeddings(chunks: string[], apiKey: string): Promise<number[][]> {
+  const client = new OpenAI({ apiKey })
 
   if (chunks.length === 0) {
     return []

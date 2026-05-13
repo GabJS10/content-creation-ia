@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
 import { db } from '../db'
-import { ideas, voiceProfiles, generatedContents } from '../db/schema'
+import { ideas, voiceProfiles, generatedContents, user } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 import OpenAI from 'openai'
-import { env } from '../lib/env'
 import { buildPrompt, extractJSON } from '../services/generation.service'
 import { searchChunks } from '../services/search.service'
+import { decrypt } from '../services/encryption.service'
 import type { AppVariables } from '../types'
 import type { FormatOptions } from '../services/generation.service'
 
@@ -54,6 +54,17 @@ generateRouter.post('/', async (c) => {
     return c.json({ error: 'Idea not found' }, 404)
   }
 
+  const [userRecord] = await db.select().from(user).where(eq(user.id, userId)).limit(1)
+
+  if (!userRecord?.openaiApiKey) {
+    return c.json(
+      { error: 'Debes configurar tu OpenAI API key en tu perfil antes de generar contenido' },
+      400
+    )
+  }
+
+  const apiKey = decrypt(userRecord.openaiApiKey)
+
   if (idea.mode === 'quick' && (!body.sourceIds || body.sourceIds.length === 0)) {
     return c.json({ error: 'El modo rápido requiere al menos un documento de conocimiento' }, 400)
   }
@@ -74,7 +85,7 @@ generateRouter.post('/', async (c) => {
 
   let ragContext: string | undefined
   if (body.sourceIds && body.sourceIds.length > 0) {
-    const chunks = await searchChunks(idea.content, body.sourceIds, 5)
+    const chunks = await searchChunks(idea.content, body.sourceIds, 5, apiKey)
     if (chunks.length > 0) {
       ragContext = chunks.map((c) => c.content).join('\n\n')
     }
@@ -113,7 +124,7 @@ generateRouter.post('/', async (c) => {
 
           console.log('Generated prompt:', prompt)
 
-          const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+          const client = new OpenAI({ apiKey })
 
           const completion = await client.chat.completions.create({
             model: 'gpt-4.1',

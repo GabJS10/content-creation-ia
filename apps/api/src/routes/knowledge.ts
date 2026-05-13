@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { db } from '../db'
-import { knowledgeSources, knowledgeChunks } from '../db/schema'
+import { knowledgeSources, knowledgeChunks, user } from '../db/schema'
 import { getChannel } from '../lib/rabbitmq'
 import { subscribe } from '../lib/redis'
 import { randomUUID } from 'crypto'
@@ -8,6 +8,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { eq, desc } from 'drizzle-orm'
+import { decrypt } from '../services/encryption.service'
 import type { AppVariables } from '../types'
 
 const knowledge = new Hono<{ Variables: AppVariables }>()
@@ -101,6 +102,17 @@ knowledge.post('/upload', async (c) => {
     return c.json({ error: 'Only PDF files are allowed' }, 400)
   }
 
+  const [userRecord] = await db.select().from(user).where(eq(user.id, userId)).limit(1)
+
+  if (!userRecord?.openaiApiKey) {
+    return c.json(
+      { error: 'Debes configurar tu OpenAI API key en tu perfil antes de subir documentos' },
+      400
+    )
+  }
+
+  const apiKey = decrypt(userRecord.openaiApiKey)
+
   const uploadsDir = join(process.cwd(), 'uploads')
   if (!existsSync(uploadsDir)) {
     await mkdir(uploadsDir, { recursive: true })
@@ -131,6 +143,7 @@ knowledge.post('/upload', async (c) => {
       JSON.stringify({
         source_id: result.id,
         file_path: filePath,
+        api_key: apiKey,
       })
     )
   )

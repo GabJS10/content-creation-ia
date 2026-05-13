@@ -13,6 +13,8 @@ export const user = pgTable('user', {
   emailVerified: boolean('email_verified').notNull().default(false),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   image: text('image'),
+  openaiApiKey: text('openai_api_key'),
+  displayName: varchar('display_name', { length: 255 }),
 })
 
 export type User = typeof user.$inferSelect

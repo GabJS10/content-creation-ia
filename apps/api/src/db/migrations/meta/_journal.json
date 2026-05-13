@@ -22,6 +22,13 @@
       "when": 1777503369961,
       "tag": "0002_mute_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778706852337,
+      "tag": "0003_lowly_skin",
+      "breakpoints": true
     }
   ]
 }

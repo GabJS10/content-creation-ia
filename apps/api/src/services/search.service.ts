@@ -6,7 +6,8 @@ import type { SearchResult } from '@content-creation-ia/types'
 export async function searchChunks(
   query: string,
   sourceIds: string[],
-  topK: number = 5
+  topK: number = 5,
+  apiKey: string
 ): Promise<SearchResult[]> {
   if (!query || query.trim() === '') {
     throw new Error('Query cannot be empty')
@@ -16,7 +17,7 @@ export async function searchChunks(
     throw new Error('sourceIds cannot be empty')
   }
 
-  const queryEmbedding = await generateEmbeddings([query.trim()])
+  const queryEmbedding = await generateEmbeddings([query.trim()], apiKey)
   const vector = queryEmbedding[0]
   const vectorLiteral = `[${vector.join(',')}]`
   const sourceIdsLiteral = `{${sourceIds.map((id) => `"${id}"`).join(',')}}`

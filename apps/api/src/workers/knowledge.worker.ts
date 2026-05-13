@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm'
 interface JobMessage {
   source_id: string
   file_path: string
+  api_key: string
 }
 
 export async function startWorker(): Promise<void> {
@@ -28,7 +29,7 @@ export async function startWorker(): Promise<void> {
       return
     }
 
-    const { source_id, file_path } = job
+    const { source_id, file_path, api_key } = job
 
     const mb = () => Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 10) / 10
 
@@ -81,7 +82,7 @@ export async function startWorker(): Promise<void> {
         message: 'Generando embeddings semánticos...',
       })
       console.log(`[${mb()}MB] Generando embeddings...`)
-      const embeddings = await generateEmbeddings(chunks)
+      const embeddings = await generateEmbeddings(chunks, api_key)
 
       publish(`source:${source_id}`, {
         stage: 'saving',
