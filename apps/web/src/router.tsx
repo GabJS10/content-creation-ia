@@ -11,6 +11,7 @@ import { ThemeProvider } from './components/theme-provider'
 import { Login } from './routes/login'
 import { Register } from './routes/register'
 import App from './App'
+import { Landing } from './pages/landing'
 import { authClient } from './lib/auth-client'
 import { DashboardLayout } from './routes/dashboard/layout'
 import { KnowledgeSources } from './routes/dashboard/knowledge'
@@ -26,9 +27,7 @@ import { Profile } from './routes/dashboard/profile'
 const rootRoute = createRootRouteWithContext<{ session: any }>()({
   component: () => (
     <ThemeProvider defaultTheme="system" enableSystem>
-      <main className="container mx-auto px-4 py-8">
-        <Outlet />
-      </main>
+      <Outlet />
     </ThemeProvider>
   ),
 })
@@ -38,11 +37,11 @@ const indexRoute = createRoute({
   path: '/',
   beforeLoad: async ({ context }) => {
     const session = await authClient.getSession()
-    if (!session.data) {
-      throw redirect({ to: '/login' })
+    if (session.data) {
+      throw redirect({ to: '/dashboard', replace: true })
     }
   },
-  component: App,
+  component: Landing,
 })
 
 const loginRoute = createRoute({
