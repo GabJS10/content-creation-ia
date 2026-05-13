@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { BlogEditor } from './editors/blog-editor'
 import { InstagramEditor } from './editors/instagram-editor'
+import { VideoScriptEditor } from './editors/video-script-editor'
 
 interface ContentResponse {
   id: string
@@ -90,15 +91,12 @@ export function ContentEditor() {
 
   if (contentData.format === 'video_script') {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <p className="text-zinc-400">Editor Video Script próximamente</p>
-        <Button
-          onClick={() => navigate({ to: `/dashboard/content/${contentData.ideaId}` })}
-          className="mt-4 bg-zinc-50 text-zinc-900 hover:bg-zinc-200"
-        >
-          Volver
-        </Button>
-      </div>
+      <VideoScriptEditor
+        content={contentData.content as unknown as { script: string }}
+        contentId={contentData.id}
+        ideaId={contentData.ideaId}
+        ideaTitle={contentData.idea.title}
+      />
     )
   }
 

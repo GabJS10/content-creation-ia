@@ -909,7 +909,7 @@ export function Generate() {
             {!isGenerating && Object.keys(streamingContents).length > 0 && !generationError && (
               <div className="pt-4 flex justify-center">
                 <Button
-                  onClick={() => console.log('Ver editores - TODO')}
+                  onClick={() => navigate({ to: `/dashboard/content/${ideaId}` })}
                   className="bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
                 >
                   Ver editores
