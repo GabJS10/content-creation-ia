@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Upload, FileText, Trash2, X } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { Upload, FileText, Trash2, X, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface KnowledgeSource {
@@ -41,6 +42,7 @@ interface ActiveProgress {
 }
 
 export function KnowledgeSources() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -58,6 +60,16 @@ export function KnowledgeSources() {
       if (!res.ok) throw new Error('Error fetching sources')
       return res.json() as Promise<KnowledgeSource[]>
     },
+  })
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const res = await fetch('http://localhost:3000/api/profile', { credentials: 'include' })
+      if (!res.ok) throw new Error('Error fetching profile')
+      return res.json() as Promise<{ hasApiKey: boolean }>
+    },
+    staleTime: 5 * 60 * 1000,
   })
 
   const uploadMutation = useMutation({
@@ -228,16 +240,35 @@ export function KnowledgeSources() {
         </p>
       </div>
 
+      {!profile?.hasApiKey && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-6">
+          <AlertTriangle className="size-4 text-yellow-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-yellow-400">
+              Necesitas configurar tu OpenAI API key para subir documentos.
+            </p>
+            <button
+              onClick={() => navigate({ to: '/dashboard/profile' })}
+              className="text-sm text-yellow-400 underline hover:text-yellow-300 mt-1"
+            >
+              Ir a Mi perfil
+            </button>
+          </div>
+        </div>
+      )}
+
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => profile?.hasApiKey && fileInputRef.current?.click()}
         className={cn(
           'relative mb-6 flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 cursor-pointer transition-colors',
           isDragging
             ? 'border-indigo-500 bg-indigo-500/5'
-            : 'border-zinc-700 bg-zinc-900 hover:border-zinc-600 hover:bg-zinc-800/50'
+            : profile?.hasApiKey
+              ? 'border-zinc-700 bg-zinc-900 hover:border-zinc-600 hover:bg-zinc-800/50'
+              : 'border-zinc-700 bg-zinc-900/50 opacity-50 cursor-not-allowed'
         )}
       >
         <input
@@ -281,7 +312,7 @@ export function KnowledgeSources() {
                   e.stopPropagation()
                   handleUpload()
                 }}
-                disabled={uploadMutation.isPending}
+                disabled={uploadMutation.isPending || !profile?.hasApiKey}
                 className="flex items-center gap-2 px-4 py-2 rounded-md bg-zinc-50 text-zinc-900 text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 transition-colors"
               >
                 {uploadMutation.isPending ? (

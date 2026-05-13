@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Outlet } from '@tanstack/react-router'
 import { useSession, signOut } from '@/lib/auth-client'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { BookOpen, Mic, Sparkles, LayoutList, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { BookOpen, Mic, Sparkles, LayoutList, LogOut, PanelLeftClose, PanelLeftOpen, UserCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -87,17 +87,33 @@ export function DashboardLayout() {
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => window.location.href = '/dashboard/profile'}
+                  className="flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+                >
+                  <UserCircle className="size-4" />
+                  Mi perfil
+                </button>
+                <ThemeToggle className="text-zinc-400" />
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <button
                   onClick={handleSignOut}
                   className="flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
                 >
                   <LogOut className="size-4" />
                   Cerrar sesión
                 </button>
-                <ThemeToggle className="text-zinc-400" />
               </div>
             </>
           ) : (
             <div className="flex flex-col items-center gap-3">
+              <button
+                onClick={() => window.location.href = '/dashboard/profile'}
+                title="Mi perfil"
+                className="flex size-10 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+              >
+                <UserCircle className="size-5" />
+              </button>
               <button
                 onClick={handleSignOut}
                 title="Cerrar sesión"

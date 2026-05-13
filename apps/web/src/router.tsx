@@ -21,6 +21,7 @@ import { Generate } from './routes/dashboard/generate'
 import { ContentList } from './routes/dashboard/content'
 import { ContentDetail } from './routes/dashboard/content/$ideaId'
 import { ContentEditor } from './pages/content/editor'
+import { Profile } from './routes/dashboard/profile'
 
 const rootRoute = createRootRouteWithContext<{ session: any }>()({
   component: () => (
@@ -137,6 +138,12 @@ const contentEditorRoute = createRoute({
   component: ContentEditor,
 })
 
+const profileRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/profile',
+  component: Profile,
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -151,6 +158,7 @@ const routeTree = rootRoute.addChildren([
     contentRoute,
     contentDetailRoute,
     contentEditorRoute,
+    profileRoute,
   ]),
 ])
 

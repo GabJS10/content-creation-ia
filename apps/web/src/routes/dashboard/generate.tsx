@@ -133,6 +133,16 @@ export function Generate() {
 
   const readySources = knowledgeSources.filter((s) => s.status === 'ready')
 
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const res = await fetch('http://localhost:3000/api/profile', { credentials: 'include' })
+      if (!res.ok) throw new Error('Error fetching profile')
+      return res.json() as Promise<{ hasApiKey: boolean }>
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+
   const createIdeaMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; mode: string; voiceProfileId?: string | null }) => {
       const res = await fetch('http://localhost:3000/api/ideas', {
@@ -474,7 +484,8 @@ export function Generate() {
   const canGenerate =
     content.trim() &&
     activeFormats.length > 0 &&
-    (mode === 'draft' || selectedSourceIds.length > 0)
+    (mode === 'draft' || selectedSourceIds.length > 0) &&
+    profile?.hasApiKey
 
   const blogOptions = formatStates.blog.options as BlogOptions
   const instagramOptions = formatStates.instagram.options as InstagramOptions
@@ -508,6 +519,22 @@ export function Generate() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {!profile?.hasApiKey && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <AlertTriangle className="size-4 text-yellow-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-yellow-400">
+                  Necesitas configurar tu OpenAI API key para generar contenido.
+                </p>
+                <button
+                  onClick={() => navigate({ to: '/dashboard/profile' })}
+                  className="text-sm text-yellow-400 underline hover:text-yellow-300 mt-1"
+                >
+                  Ir a Mi perfil
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex gap-2">
             <button
               onClick={() => handleModeChange('quick')}
