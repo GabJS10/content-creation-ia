@@ -140,7 +140,7 @@ export function Landing() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[#f0f0f0]">
+    <div className="min-h-screen bg-[#080808] text-[#e8e8e8]">
       <style>{`
         .animate-on-scroll {
           opacity: 0;
@@ -169,19 +169,19 @@ export function Landing() {
       `}</style>
 
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-[#050505] border-b border-[#111]">
+      <nav className="sticky top-0 z-50 bg-[#080808] border-b border-[#161616]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-lg font-semibold">Content Generator IA</span>
+          <span className="text-sm font-medium">Content Generator IA</span>
           <div className="flex items-center gap-8">
             <button
               onClick={() => scrollToSection('como-funciona')}
-              className="text-sm text-[#666] hover:text-[#f0f0f0] transition-colors"
+              className="text-sm text-[#4a4a4a] hover:text-[#e8e8e8] transition-colors"
             >
               Cómo funciona
             </button>
             <button
               onClick={() => scrollToSection('features')}
-              className="text-sm text-[#666] hover:text-[#f0f0f0] transition-colors"
+              className="text-sm text-[#4a4a4a] hover:text-[#e8e8e8] transition-colors"
             >
               Features
             </button>
@@ -189,13 +189,13 @@ export function Landing() {
           <div className="flex items-center gap-3">
             <Link
               to="/login"
-              className="px-4 py-2 text-sm text-[#f0f0f0] hover:text-white transition-colors"
+              className="px-4 py-2 text-sm text-[#888] hover:text-[#e8e8e8] transition-colors"
             >
               Iniciar sesión
             </Link>
             <Link
               to="/register"
-              className="px-4 py-2 text-sm bg-[#f0f0f0] text-[#050505] rounded-lg hover:bg-white transition-colors"
+              className="px-4 py-2 text-sm bg-[#e8e8e8] text-[#080808] rounded-lg hover:bg-white transition-colors"
             >
               Empezar gratis
             </Link>
@@ -205,21 +205,37 @@ export function Landing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden px-12 pt-32 pb-20 text-center">
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-[#7F77DD] opacity-[0.04] blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-[#5DCAA5] opacity-[0.03] blur-[100px] translate-x-1/4 translate-y-1/4 pointer-events-none" />
+        <div
+          className="absolute top-0 left-0 w-[700px] h-[700px] bg-radial-glow-purple -translate-x-1/3 -translate-y-1/2 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(127,119,221,0.15) 0%, transparent 70%)',
+          }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-radial-glow-teal translate-x-1/4 translate-y-1/4 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(93,202,165,0.11) 0%, transparent 70%)',
+          }}
+        />
+        <div
+          className="absolute top-1/2 right-[10%] w-[400px] h-[400px] bg-radial-glow-purple-secondary -translate-y-1/2 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(127,119,221,0.06) 0%, transparent 70%)',
+          }}
+        />
 
         <div className="relative z-10 max-w-3xl mx-auto">
           <div
-            className="animate-on-scroll inline-flex items-center gap-2 px-4 py-2 bg-[#111] border border-[#222] rounded-full"
+            className="animate-on-scroll inline-flex items-center gap-2 px-4 py-2 bg-[#111] border border-[#161616] rounded-full"
             data-delay="0"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#5DCAA5] pulse-dot" />
-            <span className="text-xs text-[#666]">Potenciado por OpenAI</span>
+            <span className="text-xs text-[#555]">Potenciado por Claude + OpenAI</span>
           </div>
 
           <h1
-            className="animate-on-scroll mt-8 text-5xl font-medium tracking-tight leading-tight"
-            style={{ fontSize: 'clamp(40px, 6vw, 64px)' }}
+            className="animate-on-scroll mt-8 font-normal leading-tight"
+            style={{ fontSize: 'clamp(40px, 6vw, 58px)', letterSpacing: '-2.5px' }}
             data-delay="100"
           >
             Tu conocimiento,
@@ -228,7 +244,7 @@ export function Landing() {
           </h1>
 
           <p
-            className="animate-on-scroll mt-6 text-lg text-[#666] max-w-md mx-auto"
+            className="animate-on-scroll mt-6 text-base text-[#555] max-w-md mx-auto"
             data-delay="200"
           >
             Sube tus documentos, define tu voz y genera artículos, carruseles y guiones en segundos.
@@ -240,13 +256,13 @@ export function Landing() {
           >
             <Link
               to="/register"
-              className="px-7 py-3 bg-[#f0f0f0] text-[#050505] rounded-lg hover:bg-white transition-colors font-medium"
+              className="px-7 py-3 bg-[#e8e8e8] text-[#080808] rounded-lg hover:bg-white transition-colors font-medium"
             >
               Empezar gratis
             </Link>
             <button
               onClick={() => scrollToSection('como-funciona')}
-              className="px-7 py-3 border border-[#222] text-[#f0f0f0] rounded-lg hover:border-[#333] transition-colors"
+              className="px-7 py-3 border border-[#222] text-[#888] rounded-lg hover:border-[#333] hover:text-[#e8e8e8] transition-colors"
             >
               Ver cómo funciona
             </button>
@@ -254,32 +270,38 @@ export function Landing() {
 
           {/* Demo */}
           <div
-            className="animate-on-scroll mt-16 max-w-[700px] mx-auto rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] overflow-hidden"
+            className="animate-on-scroll mt-16 max-w-[700px] mx-auto rounded-xl border border-[#161616] bg-[#0c0c0c] overflow-hidden"
             data-delay="400"
           >
-            <div className="flex items-center gap-2 px-4 py-3 bg-[#111] border-b border-[#1a1a1a]">
+            <div className="flex items-center gap-2 px-4 py-3 bg-[#0a0a0a] border-b border-[#161616]">
               <span className="w-3 h-3 rounded-full bg-[#E24B4A]" />
               <span className="w-3 h-3 rounded-full bg-[#EF9F27]" />
               <span className="w-3 h-3 rounded-full bg-[#639922]" />
-              <span className="ml-4 text-xs text-[#333]">contentgenerator.ai/generate</span>
+              <span className="ml-4 text-xs text-[#4a4a4a] font-mono">
+                contentgenerator.ai/generate
+              </span>
             </div>
-            <div className="grid grid-cols-2 divide-x divide-[#1a1a1a]">
+            <div className="grid grid-cols-2 divide-x divide-[#161616]">
               <div className="p-6 text-left">
-                <p className="text-xs text-[#333] mb-2 font-mono">Tu idea</p>
-                <p className="text-sm text-[#888] leading-relaxed">
+                <p className="text-[10px] text-[#4a4a4a] mb-2 font-mono uppercase tracking-wider">
+                  Tu idea
+                </p>
+                <p className="text-xs text-[#666] leading-relaxed">
                   {displayedText}
                   <span className="cursor-blink text-[#5DCAA5]" />
                 </p>
               </div>
               <div className="p-6 text-left">
-                <p className="text-xs text-[#333] mb-2 font-mono">Generando blog</p>
+                <p className="text-[10px] text-[#4a4a4a] mb-2 font-mono uppercase tracking-wider">
+                  Generando blog
+                </p>
                 <div
                   className={`transition-opacity duration-500 ${showContent ? 'opacity-100' : 'opacity-0'}`}
                 >
-                  <p className="text-base font-medium text-[#f0f0f0] mb-2">
+                  <p className="text-sm font-medium text-[#aaa] mb-2">
                     El verdadero costo de no tener precios
                   </p>
-                  <p className="text-sm text-[#666] leading-relaxed">
+                  <p className="text-xs text-[#666] leading-relaxed">
                     Cuando eliminamos la señal de precios, perdemos el mecanismo más eficiente para
                     coordinar...
                   </p>
@@ -294,25 +316,25 @@ export function Landing() {
       <section id="como-funciona" className="px-12 py-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="animate-on-scroll text-3xl font-medium" data-delay="0">
+            <h2 className="animate-on-scroll text-3xl font-normal text-[#e8e8e8]" data-delay="0">
               Cómo funciona
             </h2>
-            <p className="animate-on-scroll mt-3 text-[#555]" data-delay="100">
+            <p className="animate-on-scroll mt-3 text-[#444]" data-delay="100">
               De tu conocimiento al contenido publicable en 4 pasos
             </p>
           </div>
 
-          <div className="grid grid-cols-4 gap-px bg-[#111] rounded-xl overflow-hidden border border-[#111]">
+          <div className="grid grid-cols-4 gap-px bg-[#161616] rounded-xl overflow-hidden border border-[#161616]">
             {steps.map((step, i) => (
               <div
                 key={i}
-                className="animate-on-scroll bg-[#0a0a0a] p-8 hover:border-[#222] border border-transparent transition-colors duration-200"
+                className="animate-on-scroll bg-[#0a0a0a] p-8 transition-colors duration-200"
                 data-delay={String(i * 100)}
               >
-                <p className="text-xs text-[#333] font-mono mb-4">{step.num}</p>
-                <step.icon className="w-6 h-6 text-[#7F77DD] mb-4" />
-                <h3 className="text-base font-medium text-[#e0e0e0] mb-2">{step.title}</h3>
-                <p className="text-sm text-[#555] leading-relaxed">{step.desc}</p>
+                <p className="text-[10px] text-[#3a3a3a] font-mono mb-4">{step.num}</p>
+                <step.icon className="w-6 h-6 text-[#534AB7] mb-4" />
+                <h3 className="text-[13px] font-medium text-[#d8d8d8] font-medium">{step.title}</h3>
+                <p className="text-xs text-[#666] leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -320,13 +342,13 @@ export function Landing() {
       </section>
 
       {/* Features */}
-      <section id="features" className="px-12 py-24 border-t border-[#111]">
+      <section id="features" className="px-12 py-24 border-t border-[#161616]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="animate-on-scroll text-3xl font-medium" data-delay="0">
+            <h2 className="animate-on-scroll text-3xl font-normal text-[#e8e8e8]" data-delay="0">
               Todo lo que necesitas
             </h2>
-            <p className="animate-on-scroll mt-3 text-[#555]" data-delay="100">
+            <p className="animate-on-scroll mt-3 text-[#444]" data-delay="100">
               Construido para creadores que quieren publicar con consistencia y profundidad
             </p>
           </div>
@@ -335,12 +357,12 @@ export function Landing() {
             {features.map((feat, i) => (
               <div
                 key={i}
-                className="animate-on-scroll p-6 border border-[#111] rounded-xl bg-[#0a0a0a] hover:border-[#333] transition-colors duration-200"
+                className="animate-on-scroll p-6 border border-[#141414] rounded-xl bg-[#0a0a0a] hover:border-[#1e1e1e] transition-colors duration-200"
                 data-delay={String(i * 100)}
               >
-                <feat.icon className="w-6 h-6 text-[#5DCAA5] mb-4" />
-                <h3 className="text-base font-medium text-[#e0e0e0] mb-2">{feat.title}</h3>
-                <p className="text-sm text-[#555] leading-relaxed">{feat.desc}</p>
+                <feat.icon className="w-6 h-6 text-[#1D9E75] mb-4" />
+                <h3 className="text-[13px] font-medium text-[#d8d8d8] font-medium">{feat.title}</h3>
+                <p className="text-xs text-[#666] leading-relaxed">{feat.desc}</p>
               </div>
             ))}
           </div>
@@ -348,25 +370,30 @@ export function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="relative px-12 py-24 border-t border-[#111] text-center overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] rounded-full bg-[#7F77DD] opacity-[0.03] blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <section className="relative px-12 py-24 border-t border-[#161616] text-center overflow-hidden">
+        <div
+          className="absolute top-1/2 left-1/2 w-[600px] h-[400px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(127,119,221,0.11) 0%, transparent 70%)',
+          }}
+        />
         <div className="relative z-10 max-w-2xl mx-auto">
           <h2
-            className="animate-on-scroll text-4xl font-medium leading-tight"
-            style={{ fontSize: 'clamp(32px, 5vw, 52px)' }}
+            className="animate-on-scroll font-normal leading-tight text-[#e8e8e8]"
+            style={{ fontSize: 'clamp(32px, 5vw, 44px)', letterSpacing: '-1.5px' }}
             data-delay="0"
           >
             Empieza a crear contenido
             <br />
-            <span className="text-[#7F77DD]">con profundidad</span>
+            <span className="text-[#534AB7]">con profundidad</span>
           </h2>
-          <p className="animate-on-scroll mt-4 text-[#555]" data-delay="100">
+          <p className="animate-on-scroll mt-4 text-[#444]" data-delay="100">
             Sin configuración compleja. Sin costos ocultos.
           </p>
           <div className="animate-on-scroll mt-8" data-delay="200">
             <Link
               to="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-[#f0f0f0] text-[#050505] rounded-lg hover:bg-white transition-colors font-medium"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-[#e8e8e8] text-[#080808] rounded-lg hover:bg-white transition-colors font-medium"
             >
               Crear mi cuenta gratis
               <ArrowRight className="w-4 h-4" />
@@ -376,9 +403,9 @@ export function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="px-12 py-6 border-t border-[#0f0f0f] flex items-center justify-between">
-        <span className="text-[#333]">Content Generator IA</span>
-        <span className="text-[#333] text-sm">Gabriel Ballesteros</span>
+      <footer className="px-12 py-6 border-t border-[#141414] flex items-center justify-between">
+        <span className="text-xs text-[#222]">Content Generator IA</span>
+        <span className="text-xs text-[#222]">Gabriel Ballesteros</span>
       </footer>
     </div>
   )
