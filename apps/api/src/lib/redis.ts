@@ -1,25 +1,22 @@
 import Redis from 'ioredis'
 import { env } from './env'
 
-const publisher = new Redis(env.REDIS_URL, {
-  retryStrategy: (times) => {
-    if (times > 3) {
-      console.error('Redis publisher connection failed after 3 retries')
+// `family: 0` habilita el lookup DNS dual-stack (IPv4/IPv6). Railway usa red
+// privada solo IPv6 (`*.railway.internal`), por lo que es necesario en prod.
+const redisOptions = (label: string) => ({
+  family: 0,
+  retryStrategy: (times: number) => {
+    if (times > 20) {
+      console.error(`Redis ${label} connection failed after 20 retries`)
       process.exit(1)
     }
-    return Math.min(times * 100, 3000)
+    return Math.min(times * 200, 5000)
   },
 })
 
-const subscriber = new Redis(env.REDIS_URL, {
-  retryStrategy: (times) => {
-    if (times > 3) {
-      console.error('Redis subscriber connection failed after 3 retries')
-      process.exit(1)
-    }
-    return Math.min(times * 100, 3000)
-  },
-})
+const publisher = new Redis(env.REDIS_URL, redisOptions('publisher'))
+
+const subscriber = new Redis(env.REDIS_URL, redisOptions('subscriber'))
 
 publisher.on('error', (err) => {
   console.error('Redis publisher error:', err)

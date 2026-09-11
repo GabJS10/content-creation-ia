@@ -219,7 +219,7 @@ export function ContentDetail() {
   } = useQuery({
     queryKey: ['idea', ideaId],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/ideas/${ideaId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ideas/${ideaId}`, {
         credentials: 'include',
       })
       if (res.status === 404) throw new Error('Idea not found')
@@ -230,7 +230,7 @@ export function ContentDetail() {
 
   const deleteContentMutation = useMutation({
     mutationFn: async (contentId: string) => {
-      const res = await fetch(`http://localhost:3000/api/generate/${contentId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/${contentId}`, {
         method: 'DELETE',
         credentials: 'include',
       })

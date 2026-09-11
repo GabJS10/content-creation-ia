@@ -20,7 +20,7 @@ export function Voices() {
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['voice-profiles'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/voices', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/voices`, {
         credentials: 'include',
       })
       if (!res.ok) throw new Error('Error fetching profiles')
@@ -30,7 +30,7 @@ export function Voices() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`http://localhost:3000/api/voices/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/voices/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       })

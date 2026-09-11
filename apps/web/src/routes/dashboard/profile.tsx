@@ -26,7 +26,7 @@ export function Profile() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/profile', { credentials: 'include' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, { credentials: 'include' })
       if (!res.ok) throw new Error('Error fetching profile')
       return res.json() as Promise<Profile>
     },
@@ -34,7 +34,7 @@ export function Profile() {
 
   const nameMutation = useMutation({
     mutationFn: async (displayName: string) => {
-      const res = await fetch('http://localhost:3000/api/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +52,7 @@ export function Profile() {
 
   const apiKeyMutation = useMutation({
     mutationFn: async (openaiApiKey: string) => {
-      const res = await fetch('http://localhost:3000/api/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

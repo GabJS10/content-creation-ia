@@ -62,7 +62,7 @@ export function BlogEditor({ content, contentId, ideaId, ideaTitle }: BlogEditor
   const saveMutation = useMutation({
     mutationFn: async () => {
       const bodyHtml = editor?.getHTML() || ''
-      const res = await fetch(`http://localhost:3000/api/generate/${contentId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/${contentId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

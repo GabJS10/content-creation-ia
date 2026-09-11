@@ -107,7 +107,7 @@ export function Generate() {
   const { data: ideas = [], isLoading: isLoadingIdeas } = useQuery({
     queryKey: ['ideas'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/ideas', { credentials: 'include' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ideas`, { credentials: 'include' })
       if (!res.ok) throw new Error('Error fetching ideas')
       return res.json() as Promise<Idea[]>
     },
@@ -116,7 +116,7 @@ export function Generate() {
   const { data: voiceProfiles = [] } = useQuery({
     queryKey: ['voice-profiles'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/voices', { credentials: 'include' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/voices`, { credentials: 'include' })
       if (!res.ok) throw new Error('Error fetching profiles')
       return res.json() as Promise<VoiceProfile[]>
     },
@@ -125,7 +125,7 @@ export function Generate() {
   const { data: knowledgeSources = [] } = useQuery({
     queryKey: ['knowledge-sources'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/knowledge', { credentials: 'include' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/knowledge`, { credentials: 'include' })
       if (!res.ok) throw new Error('Error fetching sources')
       return res.json() as Promise<KnowledgeSource[]>
     },
@@ -136,7 +136,7 @@ export function Generate() {
   const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/profile', { credentials: 'include' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, { credentials: 'include' })
       if (!res.ok) throw new Error('Error fetching profile')
       return res.json() as Promise<{ hasApiKey: boolean }>
     },
@@ -145,7 +145,7 @@ export function Generate() {
 
   const createIdeaMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; mode: string; voiceProfileId?: string | null }) => {
-      const res = await fetch('http://localhost:3000/api/ideas', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ideas`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -175,7 +175,7 @@ export function Generate() {
 
   const updateIdeaMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; mode: string; voiceProfileId?: string | null; selectedFormats?: string[] }) => {
-      const res = await fetch(`http://localhost:3000/api/ideas/${ideaId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ideas/${ideaId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -188,7 +188,7 @@ export function Generate() {
 
   const deleteIdeaMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`http://localhost:3000/api/ideas/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ideas/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       })
@@ -354,7 +354,7 @@ export function Generate() {
     setGenerationError(null)
 
     try {
-      const response = await fetch('http://localhost:3000/api/generate', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/generate`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

@@ -7,6 +7,9 @@ process.on('unhandledRejection', (reason) => {
 })
 
 import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { auth } from './lib/auth'
@@ -26,7 +29,7 @@ const app = new Hono()
 app.use(
   '*',
   cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.WEB_ORIGIN || 'http://localhost:5173',
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowHeaders: ['Content-Type', 'Authorization'],
@@ -56,6 +59,13 @@ app.route('/api/ideas', ideasRoutes)
 app.route('/api/generate', generateRoutes)
 app.route('/api/profile', profileRoutes)
 
+// Sirve el build del SPA (apps/web/dist) y hace fallback a index.html para el
+// enrutado del lado del cliente (TanStack Router). Se resuelve como ruta
+// absoluta desde este módulo para que funcione sea cual sea el CWD del proceso.
+const webDist = join(dirname(fileURLToPath(import.meta.url)), '../../web/dist')
+app.use('/*', serveStatic({ root: webDist }))
+app.get('/*', serveStatic({ path: join(webDist, 'index.html') }))
+
 async function start(): Promise<void> {
   await connectRabbitMQ()
   await startWorker()
@@ -63,7 +73,7 @@ async function start(): Promise<void> {
   serve(
     {
       fetch: app.fetch,
-      port: 3000,
+      port: Number(process.env.PORT) || 3000,
     },
     (info) => {
       console.log(`API corriendo en http://localhost:${info.port}`)

@@ -35,7 +35,7 @@ export function ContentList() {
   const { data: ideas = [], isLoading } = useQuery({
     queryKey: ['ideas'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/ideas', { credentials: 'include' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ideas`, { credentials: 'include' })
       if (!res.ok) throw new Error('Error fetching ideas')
       return res.json() as Promise<Idea[]>
     },
@@ -43,7 +43,7 @@ export function ContentList() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`http://localhost:3000/api/ideas/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ideas/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       })

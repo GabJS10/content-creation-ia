@@ -40,7 +40,7 @@ export function InstagramEditor({ content, contentId, ideaId, ideaTitle }: Insta
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/generate/${contentId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/${contentId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

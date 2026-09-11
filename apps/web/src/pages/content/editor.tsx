@@ -29,7 +29,7 @@ export function ContentEditor() {
   const { data: contentData, isLoading, error } = useQuery({
     queryKey: ['content', contentId],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/generate/${contentId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/${contentId}`, {
         credentials: 'include',
       })
       if (res.status === 404) throw new Error('Content not found')

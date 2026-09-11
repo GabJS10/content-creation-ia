@@ -38,7 +38,7 @@ export function VoiceProfileForm({ profileId }: VoiceProfileFormProps) {
   } = useQuery({
     queryKey: ['voice-profile', profileId],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/voices/${profileId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/voices/${profileId}`, {
         credentials: 'include',
       })
       if (!res.ok) {
@@ -61,7 +61,7 @@ export function VoiceProfileForm({ profileId }: VoiceProfileFormProps) {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('http://localhost:3000/api/voices', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/voices`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -84,7 +84,7 @@ export function VoiceProfileForm({ profileId }: VoiceProfileFormProps) {
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/voices/${profileId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/voices/${profileId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

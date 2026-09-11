@@ -54,7 +54,7 @@ export function KnowledgeSources() {
   const { data: sources = [], isLoading } = useQuery({
     queryKey: ['knowledge-sources'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/knowledge', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/knowledge`, {
         credentials: 'include',
       })
       if (!res.ok) throw new Error('Error fetching sources')
@@ -65,7 +65,7 @@ export function KnowledgeSources() {
   const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/profile', { credentials: 'include' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, { credentials: 'include' })
       if (!res.ok) throw new Error('Error fetching profile')
       return res.json() as Promise<{ hasApiKey: boolean }>
     },
@@ -77,7 +77,7 @@ export function KnowledgeSources() {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('title', title)
-      const res = await fetch('http://localhost:3000/api/knowledge/upload', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/knowledge/upload`, {
         method: 'POST',
         credentials: 'include',
         body: formData,
@@ -112,7 +112,7 @@ export function KnowledgeSources() {
         stage: 'received',
       })
 
-      const es = new EventSource(`http://localhost:3000/api/knowledge/${data.source_id}/stream`)
+      const es = new EventSource(`${import.meta.env.VITE_API_URL}/api/knowledge/${data.source_id}/stream`)
 
       es.onmessage = (e) => {
         const event = JSON.parse(e.data) as {
@@ -171,7 +171,7 @@ export function KnowledgeSources() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`http://localhost:3000/api/knowledge/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/knowledge/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       })
